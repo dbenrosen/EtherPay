@@ -1,0 +1,47 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+    defaultConfig {
+        applicationId "com.bringcommunications.etherpay"
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode 3
+        versionName "1.02"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDir 'jniLibs'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile files('libs/ethereumj-core-1.4.0-SNAPSHOT.jar')
+    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:design:25.0.1'
+    testCompile 'junit:junit:4.12'
+    compile files('libs/commons-codec-1.9.jar')
+    compile files('libs/commons-logging-1.2.jar')
+    compile files('libs/slf4j-android-1.7.21.jar')
+    compile files('libs/core-1.54.0.0.jar')
+    compile files('libs/commons-lang3-3.5.jar')
+    compile files('libs/zbar.jar')
+    compile 'com.github.kenglxn.QRGen:android:2.2.0'
+
+}
