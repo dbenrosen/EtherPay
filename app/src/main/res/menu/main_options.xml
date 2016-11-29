@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/import_account"
+        android:title="Import Account" />
+    <!--
+    <item android:id="@+id/donate"
+        android:title="Donate" />
+        -->
+    <item android:id="@+id/welcome"
+        android:title="Show Welcome Message" />
+    <item android:id="@+id/about"
+        android:title="About EtherPay" />
+</menu>

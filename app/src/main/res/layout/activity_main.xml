@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.bringcommunications.etherpay.MainActivity">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:layout_alignParentTop="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="33dp"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:text="Wallet: "
+        android:id="@+id/wallet_prompt"
+        android:layout_below="@id/toolbar"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_marginTop="33dp"
+        android:layout_marginLeft="22dp"
+        android:singleLine="true"
+        android:text="Wallet ID"
+        android:id="@+id/wallet_id"
+        android:layout_toRightOf="@id/wallet_prompt"
+        android:layout_below="@id/toolbar" />
+
+    />
+
+    <TextView
+        android:text="Balance: "
+        android:layout_marginTop="44dp"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/balance_prompt"
+        android:layout_below="@+id/wallet_prompt" />
+
+    <TextView
+        android:text="0.00000 ETH"
+        android:layout_marginLeft="22dp"
+        android:textSize="18sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:singleLine="true"
+        android:id="@+id/balance"
+        android:layout_toRightOf="@id/balance_prompt"
+        android:layout_alignBaseline="@+id/balance_prompt"
+        android:layout_alignBottom="@+id/balance_prompt"
+        android:layout_below="@+id/wallet_id"
+        />
+
+    <ImageButton
+        android:text="refresh"
+        android:layout_marginLeft="33dp"
+        android:src="@drawable/ic_icon_refresh_128"
+        android:layout_marginRight="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/refresh_button"
+        android:onClick="do_refresh"
+        android:layout_toRightOf="@id/balance"
+        android:layout_alignBottom="@id/balance"
+        />
+
+    <TextView
+        android:text="0.00 USD"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="22dp"
+        android:textSize="14sp"
+        android:gravity="left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:id="@+id/usd_balance"
+        android:layout_toRightOf="@id/balance_prompt"
+        android:layout_below="@+id/balance"
+        />
+
+    <Button
+        android:text="Pay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:id="@+id/pay_button"
+        android:onClick="do_pay"
+        />
+
+    <Button
+        android:layout_marginLeft="22dp"
+        android:layout_toRightOf="@+id/pay_button"
+        android:layout_centerVertical="true"
+        android:text="Receive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/receive_button"
+        android:onClick="do_receive"/>
+
+
+
+</RelativeLayout>

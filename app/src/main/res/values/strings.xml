@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">EtherPay</string>
+    <string name="title_activity_send">SendActivity</string>
+    <string name="no_acct">You have not set up an Ether account yet.
+        Before using this app you need to import an Ether account using
+        the "import account" menu item.
+    </string>
+    <string name="scan_addr_prompt">
+    Scan the QR code that represents the reqipient address. Once the recipient
+    address has been identified, you will be able to specify the amount of Ether
+    that you would like to send.
+    </string>
+    <string name="scan_key_prompt">
+    Scan the QR code that represents the private key for the account that you want
+    to import.
+    \n\nHint: To get a QR code for the private key for your account, you can visit
+    https://www.myetherwallet.com and select the view-wallet-info tab.
+    </string>
+    <string name="ask_delete_old_key">This version of Etherpay only supports
+    a single account. If you import a new account, then you erase your
+    current account &#8212; (the account still exists, of course, but you will need
+    to re-import it if you want to use it with Etherpay).
+    </string>
+    <string name="welcome">
+      EtherPay is an Ether wallet app. &#8212; use it to check the balance in an Ether
+      account; or to send or receive Ether to/from other Ether addresses.
+      \n\nTo use the app, the first thing you need to do is import an Ether account.
+      You need to use some other Ether client to create an account &#8212; I recommend
+      https://www.myetherwallet.com/. Even of you already have a wallet, in order
+      to import it you\&apos;ll need to get the private key, which you can do at
+      myetherwallet.com, (under the view wallet info tab). Once you have the private key,
+      to import it into the EtherPay app select the \"import account\" menu item.
+      \n\nNOTE: The EtherPay app is *not* an \"Ethereum node\"&#8212;it uses etherchain.org
+      to check your Ether balance; it uses your private key to sign transactions; and it uses
+      etherscan.io to broadcast signed transactions. Your private key is never transmitted.
+    </string>
+    <string name="about">
+    EtherPay is an Ether wallet app.
+      \n\nI wrote it, honestly, because I love the whole concept of Ethereum, and I wanted
+      to contribute in some way; and because I couldn\&apos;t find a simple Ether wallet for my
+      smartphone.
+      \n\nEther is usually not marketed as a currency &#8212; it is the way to pay for
+      computation on the Ethereum distributed computing platform. But in my eyes this gives Ether
+      an intrinsic value, in a way that is absent from other crypto-currencies. And the fact that
+      Ether has intrinsic value, combined with it\&apos;s fast transaction time, 15 seconds, makes
+      Ether perfect as a currency. Ulimately I believe that Ether will be widely used as a currency;
+      and it\&apos;s intrinsic usability will simply ensure that it\&apos;s value cannot be zero
+      (much as gold has intrinsic value, because of it\&apos;s beauty and maleablity; and therefore
+      it is a natural currency).
+      \n\nOne of the reasons that I would like to see the wide adoption of crypto-currencies, in
+      general, and Ether in particular, is that I am a big fan of the Fourth Amendment of the U.S.
+      Constitution, which provides:
+      \n\n\"the right of the people to be secure in their persons, houses, papers, and
+      effects, against unreasonable searches and seizures.\"
+      \n\nThat is, I believe people ought to have privacy &#8212; and the anonymity of
+      crypto-currencies is an important a step in that direction.
+      \n\nThe EtherPay app is free; Please use it in good health! I plan to make other products
+      to help people adopt Ether as a general-use currency.
+      \n\nDavid Rosen, author of EtherPay.
+    </string>
+    <string name="receive_qr_prompt">
+    This QR code represents your public account address. You need to provide this address to
+    any  person, in order for them to send you Ether. You can allow people to scan the address
+    directly from your phone, or you can share it, using the share button below.
+    \n\nNote: It generally takes about 15 seconds for an Ether transaction to affect your
+    balance.
+    </string>
+    <string name="min_sec_between_pays">
+    You cannot send multiple payments in a rapid-fire sequence &#8212; To ensure that your
+    payments are processed in order, please wait at least 30 seconds between consequitive
+    payments.
+    </string>
+</resources>
