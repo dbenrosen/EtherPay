@@ -163,6 +163,7 @@
         return;
       }
       //price is automatically refreshed in handle_rsp for balance
+      Toast.makeText(context, "refreshing account status... one moment...", Toast.LENGTH_SHORT).show();
       String balance_parms[] = new String[2];
       balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
       balance_parms[1] = "balance";
