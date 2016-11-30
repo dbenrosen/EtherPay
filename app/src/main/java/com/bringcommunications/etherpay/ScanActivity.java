@@ -145,6 +145,7 @@ public class ScanActivity extends Activity implements PreviewCallback
         if (mCamera != null) {
             previewing = false;
             mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
             mCamera.release();
             mCamera = null;
         }

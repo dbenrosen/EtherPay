@@ -30,6 +30,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Camera mCamera;
     private PreviewCallback previewCallback;
     private AutoFocusCallback autoFocusCallback;
+    private boolean surface_been_destroted;
 
     public CameraPreview(Context context, Camera camera,
                          PreviewCallback previewCb,
@@ -38,6 +39,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         previewCallback = previewCb;
         autoFocusCallback = autoFocusCb;
+        surface_been_destroted = false;
 
         /*
          * Set camera to continuous focus if supported, otherwise use
@@ -65,18 +67,29 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
-        try {
-            mCamera.setPreviewDisplay(holder);
-        } catch (IOException e) {
-            Log.d("DBG", "Error setting camera preview: " + e.getMessage());
+        //watch pit for a race condition in which the camera is released before the sureface is
+        //created. this would cause a crash if you pressed the back-key while the preview was still
+        //being initialized
+        if (!surface_been_destroted) {
+            try {
+                mCamera.setPreviewDisplay(holder);
+            } catch (IOException e) {
+                Log.d("DBG", "Error setting camera preview: " + e.getMessage());
+            }
         }
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
+        // System.out.println("in surfaceDestroyed");
         // Camera preview released in activity
+        surface_been_destroted = true;
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        if (surface_been_destroted) {
+            return;
+        }
+
         /*
          * If your preview can change or rotate, take care of those events here.
          * Make sure to stop the preview before resizing or reformatting it.
