@@ -30,7 +30,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Camera mCamera;
     private PreviewCallback previewCallback;
     private AutoFocusCallback autoFocusCallback;
-    private boolean surface_been_destroted;
+    private boolean surface_been_destroyed;
 
     public CameraPreview(Context context, Camera camera,
                          PreviewCallback previewCb,
@@ -39,7 +39,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         previewCallback = previewCb;
         autoFocusCallback = autoFocusCb;
-        surface_been_destroted = false;
+        surface_been_destroyed = false;
 
         /*
          * Set camera to continuous focus if supported, otherwise use
@@ -70,7 +70,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         //watch pit for a race condition in which the camera is released before the sureface is
         //created. this would cause a crash if you pressed the back-key while the preview was still
         //being initialized
-        if (!surface_been_destroted) {
+        if (!surface_been_destroyed) {
             try {
                 mCamera.setPreviewDisplay(holder);
             } catch (IOException e) {
@@ -82,11 +82,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder) {
         // System.out.println("in surfaceDestroyed");
         // Camera preview released in activity
-        surface_been_destroted = true;
+        surface_been_destroyed = true;
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        if (surface_been_destroted) {
+        if (surface_been_destroyed) {
             return;
         }
 

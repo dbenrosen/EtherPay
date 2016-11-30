@@ -74,7 +74,7 @@
     private FrameLayout overlay_frame_layout;
     private View activity_main_view;
     private MainActivity context;
-
+    private Toast toast = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,7 +143,6 @@
         if (acct_addr.isEmpty() && private_key.isEmpty()) {
           show_welcome_dialog();
         } else if (acct_addr.isEmpty() && !private_key.isEmpty()) {
-          //final Toast tag = Toast.makeText(getBaseContext(), "new acct from key " + private_key + " (" + private_key.length() + ")", Toast.LENGTH_SHORT);
           if (private_key.length() != 64) {
             Util.show_err(getBaseContext(), "invalid private key; length is " + private_key.length(), 5);
             private_key = "";
@@ -163,8 +162,7 @@
               preferences_editor.putString("acct_addr", acct_addr);
               preferences_editor.putLong("last_nonce", last_nonce);
               preferences_editor.commit();
-              Toast tag = Toast.makeText(getBaseContext(), "new acct sucessfully imported: " + acct_addr, Toast.LENGTH_LONG);
-              tag.show();
+              Toast.makeText(getBaseContext(), "new acct sucessfully imported: " + acct_addr, Toast.LENGTH_LONG).show();
             }
           }
         }
@@ -213,7 +211,7 @@
           schedule_refresh();
         } else {
           last_refresh_sec = now_sec;
-          Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT).show();
+          (toast = Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT)).show();
           String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
           String parms[] = new String[2];
           parms[0] = nonce_URL;
@@ -222,14 +220,18 @@
         }
       } else if (last_balance_sec < last_nonce_sec) {
         last_refresh_sec = now_sec;
-        Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT).show();
+	if (toast != null)
+	    toast.cancel();
+        (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
         String balance_parms[] = new String[2];
         balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
         balance_parms[1] = "balance-refresh";
         new HTTP_Query_Task(this, context).execute(balance_parms);
       } else if (last_price_sec < last_nonce_sec) {
         last_refresh_sec = now_sec;
-        Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT).show();
+	if (toast != null)
+	  toast.cancel();
+        (toast = Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT)).show();
         String price_parms[] = new String[2];
         price_parms[0] = "https://etherchain.org/api/basic_stats";
         price_parms[1] = "price-refresh";
@@ -239,6 +241,8 @@
           refresh_mode = false;
           dsp_balance();
         }
+	if (toast != null)
+	  toast.cancel();
         Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT).show();
       }
     }
@@ -257,7 +261,7 @@
           Util.show_err(getBaseContext(), msg, 10);
           return;
         } else {
-          Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT).show();
+          (toast = Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT)).show();
           String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
           String parms[] = new String[2];
           parms[0] = nonce_URL;
@@ -266,20 +270,28 @@
         }
       }
       if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec < 10)) {
-        Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT).show();
+    	if (toast != null)
+          toast.cancel();
+        (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
         String balance_parms[] = new String[2];
         balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
         balance_parms[1] = "balance-pay";
         new HTTP_Query_Task(this, context).execute(balance_parms);
         return;
       }
-      if (price == 0 || last_price_sec < last_nonce_sec) {
-        Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT).show();
+      if (last_price_sec < last_nonce_sec || price == 0) {
+        if (toast != null)
+          toast.cancel();
+        (toast = Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT)).show();
         String price_parms[] = new String[2];
         price_parms[0] = "https://etherchain.org/api/basic_stats";
         price_parms[1] = "price-pay";
         new HTTP_Query_Task(this, context).execute(price_parms);
         return;
+      }
+      if (now_sec - last_price_sec < 5 && toast != null) {
+        toast.cancel();
+        (toast = Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT)).show();
       }
       do_pay_guts();
     }
