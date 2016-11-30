@@ -252,12 +252,21 @@
         return;
       }
       if (nonce < last_nonce) {
-        String msg = getResources().getString(R.string.min_sec_between_pays);
-        Util.show_err(getBaseContext(), msg, 10);
-        return;
+        if (now_sec - last_pay_sec < 75) {
+          String msg = getResources().getString(R.string.min_sec_between_pays);
+          Util.show_err(getBaseContext(), msg, 10);
+          return;
+        } else {
+          Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT).show();
+          String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
+          String parms[] = new String[2];
+          parms[0] = nonce_URL;
+          parms[1] = "nonce-pay";
+          new HTTP_Query_Task(this, context).execute(parms);
+        }
       }
       if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec < 10)) {
-        Toast.makeText(context, "refreshing account status (balance). one moment...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT).show();
         String balance_parms[] = new String[2];
         balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
         balance_parms[1] = "balance-pay";
@@ -265,7 +274,7 @@
         return;
       }
       if (price == 0 || last_price_sec < last_nonce_sec) {
-        Toast.makeText(context, "refreshing account status (price). one moment...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT).show();
         String price_parms[] = new String[2];
         price_parms[0] = "https://etherchain.org/api/basic_stats";
         price_parms[1] = "price-pay";
