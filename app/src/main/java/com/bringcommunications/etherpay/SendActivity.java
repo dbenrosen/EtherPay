@@ -146,6 +146,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       long last_pay_sec = System.currentTimeMillis() / 1000;
       SharedPreferences.Editor preferences_editor = preferences.edit();
       preferences_editor.putLong("last_pay_sec", last_pay_sec);
+      preferences_editor.putBoolean("refresh_mode", true);
       preferences_editor.putLong("last_nonce", nonce);
       preferences_editor.apply();
     }

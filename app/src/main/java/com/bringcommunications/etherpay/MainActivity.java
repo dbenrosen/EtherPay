@@ -1,5 +1,22 @@
   package com.bringcommunications.etherpay;
 
+/*
+  overview of vars stored in preferences:
+
+  balance          => most recent balance of current acct
+  price            => most recent price of Ether in USD
+  last_refresh_sec => timestamp for last time we attempted to update nonce, price, balance
+  last_nonce_sec   => timestamp for last time we updated balance
+  last_price_sec   => timestamp for last time we updated price
+  last_balance_sec => timestamp for last time we updated balance
+  last_pay_sec     => timestamp for last time we completed a payment
+  private_key      => current account's private key
+  acct_addr        => current account address
+  last_nonce       => nonce used in last payment
+  refresh_mode     => mode is set after a payment completes, until we refresh balance
+*/
+
+
   import android.content.DialogInterface;
   import android.content.Intent;
   import android.content.SharedPreferences;
@@ -13,6 +30,8 @@
   import android.view.MenuInflater;
   import android.view.MenuItem;
   import android.view.View;
+  import android.view.animation.AlphaAnimation;
+  import android.view.animation.Animation;
   import android.widget.FrameLayout;
   import android.widget.TextView;
   import android.widget.Toast;
@@ -44,13 +63,18 @@
     private float balance = 0;
     private float price = 0;
     private long last_refresh_sec = 0;
+    private long last_nonce_sec = 0;
+    private long last_price_sec = 0;
+    private long last_balance_sec = 0;
     private long last_pay_sec = 0;
-    private long last_nonce = -1;
+    private long last_nonce = 0;
     private long nonce = -1;
+    private boolean refresh_mode = false;
     private SharedPreferences preferences;
     private FrameLayout overlay_frame_layout;
     private View activity_main_view;
     private MainActivity context;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +119,7 @@
         preferences_editor.putFloat("price", price);
         preferences_editor.putLong("refresh-sec", last_refresh_sec);
         preferences_editor.putLong("last_pay_sec", last_pay_sec);
+        preferences_editor.putBoolean("refresh_mode", false);
         preferences_editor.commit();
     }
 
@@ -107,6 +132,7 @@
         private_key = preferences.getString("key", private_key);
         acct_addr = preferences.getString("acct_addr", "");
         last_nonce = preferences.getLong("last_nonce", last_nonce);
+        refresh_mode = preferences.getBoolean("refresh_mode", false);
         //for test only
         if (BuildConfig.DEBUG) {
           if (false && private_key.isEmpty()) {
@@ -130,20 +156,27 @@
               private_key = "";
               acct_addr = "";
             } else {
+              refresh_mode = true;
+              last_nonce = 0;
+              balance = 0;
               SharedPreferences.Editor preferences_editor = preferences.edit();
               preferences_editor.putString("acct_addr", acct_addr);
+              preferences_editor.putLong("last_nonce", last_nonce);
               preferences_editor.commit();
               Toast tag = Toast.makeText(getBaseContext(), "new acct sucessfully imported: " + acct_addr, Toast.LENGTH_LONG);
               tag.show();
-              balance = 0;
             }
           }
         }
-        if (acct_addr.isEmpty())
+        if (acct_addr.isEmpty()) {
+          last_nonce = 0;
           balance = 0;
+        }
         dsp_balance();
         dsp_acct_addr();
-    }
+        if (refresh_mode)
+          schedule_refresh();
+      }
 
     public void do_receive(View view) {
       if (acct_addr.isEmpty()) {
@@ -156,18 +189,58 @@
     }
 
 
+    public void schedule_refresh() {
+      new CountDownTimer(10000, 5000) {
+        public void onTick(long millisUntilFinished) {
+          //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+        }
+        public void onFinish() {
+          do_refresh(null);
+        }
+      }.start();
+    }
+
     public void do_refresh(View view) {
       if (acct_addr.isEmpty()) {
         String msg = getResources().getString(R.string.no_acct);
         Util.show_err(getBaseContext(), msg, 5);
         return;
       }
-      //price is automatically refreshed in handle_rsp for balance
-      Toast.makeText(context, "refreshing account status... one moment...", Toast.LENGTH_SHORT).show();
-      String balance_parms[] = new String[2];
-      balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
-      balance_parms[1] = "balance";
-      new HTTP_Query_Task(this, context).execute(balance_parms);
+      long now_sec = System.currentTimeMillis() / 1000;
+      if (view != null || nonce < last_nonce) {
+        if (now_sec - last_refresh_sec < 5) {
+          Toast.makeText(context, "continuing refresh.... (" + nonce + "/" + last_nonce + ")", Toast.LENGTH_LONG).show();
+          schedule_refresh();
+        } else {
+          last_refresh_sec = now_sec;
+          Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT).show();
+          String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
+          String parms[] = new String[2];
+          parms[0] = nonce_URL;
+          parms[1] = "nonce-refresh";
+          new HTTP_Query_Task(this, context).execute(parms);
+        }
+      } else if (last_balance_sec < last_nonce_sec) {
+        last_refresh_sec = now_sec;
+        Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT).show();
+        String balance_parms[] = new String[2];
+        balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
+        balance_parms[1] = "balance-refresh";
+        new HTTP_Query_Task(this, context).execute(balance_parms);
+      } else if (last_price_sec < last_nonce_sec) {
+        last_refresh_sec = now_sec;
+        Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT).show();
+        String price_parms[] = new String[2];
+        price_parms[0] = "https://etherchain.org/api/basic_stats";
+        price_parms[1] = "price-refresh";
+        new HTTP_Query_Task(this, context).execute(price_parms);
+      } else {
+        if (refresh_mode) {
+          refresh_mode = false;
+          dsp_balance();
+        }
+        Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT).show();
+      }
     }
 
 
@@ -178,34 +251,26 @@
         Util.show_err(getBaseContext(), msg, 5);
         return;
       }
-      if (balance == 0 || price == 0 || now_sec - last_refresh_sec > 10 * 60) {
+      if (nonce < last_nonce) {
+        String msg = getResources().getString(R.string.min_sec_between_pays);
+        Util.show_err(getBaseContext(), msg, 10);
+        return;
+      }
+      if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec < 10)) {
         Toast.makeText(context, "refreshing account status (balance). one moment...", Toast.LENGTH_SHORT).show();
-        //price is automatically refreshed in handle_rsp for balance, then it will call us again
         String balance_parms[] = new String[2];
         balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
-        balance_parms[1] = "balance-do-pay";
+        balance_parms[1] = "balance-pay";
         new HTTP_Query_Task(this, context).execute(balance_parms);
         return;
       }
-      if (now_sec - last_pay_sec < 60) {
-        if (nonce < 0) {
-          //we haven't retrieved nonce since last payment. check it now. if it hasn't changed, then
-          //we can't do another payment yet. the http_query_task callback will call set_nonce, and
-          //then call us again.
-          Toast.makeText(context, "refreshing account status (nonce). one moment...", Toast.LENGTH_SHORT).show();
-          String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
-          String parms[] = new String[2];
-          parms[0] = nonce_URL;
-          parms[1] = "nonce-do-pay";
-          new HTTP_Query_Task(this, context).execute(parms);
-          return;
-        } else if (nonce < last_nonce) {
-          String msg = getResources().getString(R.string.min_sec_between_pays);
-          Util.show_err(getBaseContext(), msg, 10);
-          //so next time he tries, we'll refresh nonce..
-          nonce = -1;
-          return;
-        }
+      if (price == 0 || last_price_sec < last_nonce_sec) {
+        Toast.makeText(context, "refreshing account status (price). one moment...", Toast.LENGTH_SHORT).show();
+        String price_parms[] = new String[2];
+        price_parms[0] = "https://etherchain.org/api/basic_stats";
+        price_parms[1] = "price-pay";
+        new HTTP_Query_Task(this, context).execute(price_parms);
+        return;
       }
       do_pay_guts();
     }
@@ -289,20 +354,20 @@
 
 
     public void handle_http_rsp(String callback, String rsp) {
+      int next_idx = callback.indexOf("-");
+      String next_callback = (next_idx >= 0) ? callback.substring(next_idx + 1) : "";
       if (callback.startsWith("balance")) {
         set_balance(rsp);
-        String price_parms[] = new String[2];
-        price_parms[0] = "https://etherchain.org/api/basic_stats";
-        price_parms[1] = callback.equals("balance-do-pay") ? "price-do-pay" : "price";
-        new HTTP_Query_Task(this, context).execute(price_parms);
       } else if (callback.startsWith("price")) {
         set_price(rsp);
-        if (callback.equals("price-do-pay"))
-          do_pay(null);
       } else if (callback.startsWith("nonce")) {
         set_nonce(rsp);
-        if (callback.equals("nonce-do-pay"))
-          do_pay(null);
+      }
+      //
+      if (next_callback.startsWith("refresh")) {
+        do_refresh(null);
+      } else if (next_callback.equals("pay")) {
+        do_pay(null);
       }
     }
 
@@ -323,9 +388,10 @@
         int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
         int end_idx = nonce_rsp.indexOf('}', beg_idx);
         String nonce_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-        if (!nonce_str.equals("null"))
+        if (!nonce_str.equals("null")) {
           nonce = Long.valueOf(nonce_str);
-        //Toast.makeText(context, "nonce = " + nonce, Toast.LENGTH_LONG).show();
+          last_nonce_sec = System.currentTimeMillis() / 1000;
+        }
       } else {
         Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
         Util.show_err(getBaseContext(), nonce_rsp, 10);
@@ -355,8 +421,10 @@
         int beg_idx = rsp.indexOf(':', field_idx) + 1;
         int end_idx = rsp.indexOf(',', beg_idx);
         String balance_str = rsp.substring(beg_idx, end_idx).trim();
-        if (!balance_str.equals("null"))
+        if (!balance_str.equals("null")) {
           balance = Float.valueOf(balance_str) / WEI_PER_ETH;
+          last_balance_sec = System.currentTimeMillis() / 1000;
+        }
       } else {
         Util.show_err(getBaseContext(), "error retreiving balance!", 3);
         Util.show_err(getBaseContext(), rsp, 10);
@@ -388,12 +456,13 @@
           int beg_idx = rsp.indexOf(':', field_idx) + 1;
           int end_idx = rsp.indexOf(',', beg_idx);
           String price_str = rsp.substring(beg_idx, end_idx).trim();
-          if (!price_str.equals("null"))
+          if (!price_str.equals("null")) {
             price = Float.valueOf(price_str);
+            last_price_sec = System.currentTimeMillis() / 1000;
+          }
         }
       }
       dsp_balance();
-      last_refresh_sec = System.currentTimeMillis() / 1000;
     }
 
 
@@ -405,6 +474,16 @@
       float usd_balance = balance * price;
       String usd_balance_str = String.format("%2.02f", usd_balance) + " USD";
       usd_balance_view.setText(String.valueOf(usd_balance_str));
+      if (refresh_mode) {
+        Animation anim = new AlphaAnimation(0.0f, 1.0f);
+        anim.setDuration(150);
+        anim.setStartOffset(20);
+        anim.setRepeatMode(Animation.REVERSE);
+        anim.setRepeatCount(Animation.INFINITE);
+        balance_view.startAnimation(anim);
+      } else {
+        balance_view.clearAnimation();
+      }
     }
 
     private void dsp_acct_addr() {
