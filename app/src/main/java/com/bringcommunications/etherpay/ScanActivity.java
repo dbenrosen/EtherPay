@@ -15,8 +15,11 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
+import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -40,8 +43,12 @@ import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
 import net.sourceforge.zbar.Config;
 
-public class ScanActivity extends Activity implements PreviewCallback
+public class ScanActivity
+        //extends Activity
+        extends AppCompatActivity
+        implements PreviewCallback
 {
+    private FrameLayout overlay_frame_layout;
     private String target_activity;
     private Camera mCamera;
     private CameraPreview mPreview;
@@ -65,22 +72,30 @@ public class ScanActivity extends Activity implements PreviewCallback
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        setContentView(R.layout.activity_scan);
+        overlay_frame_layout = new FrameLayout(getApplicationContext());
+        setContentView(overlay_frame_layout);
+        View activity_scan_view = getLayoutInflater().inflate(R.layout.activity_scan, overlay_frame_layout, false);
+        setContentView(activity_scan_view);
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        //
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
         target_activity = getIntent().getStringExtra("TARGET_ACTIVITY");
         String scan_prompt = getIntent().getStringExtra("SCAN_PROMPT");
-
         autoFocusHandler = new Handler();
-
-        /* Instance barcode scanner */
+        //Instance barcode scanner
         scanner = new ImageScanner();
         scanner.setConfig(0, Config.X_DENSITY, 3);
         scanner.setConfig(0, Config.Y_DENSITY, 3);
-
+        //
         instructions_view = (TextView)findViewById(R.id.instructions);
         instructions_view.setText(scan_prompt);
         barcodeScanned = false;
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //no options menu
+        return(false);
     }
 
 

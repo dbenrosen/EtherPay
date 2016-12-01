@@ -8,11 +8,14 @@ import android.os.CountDownTimer;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +48,7 @@ import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 public class SendActivity extends AppCompatActivity implements HTTP_Query_Client {
 
+  private FrameLayout overlay_frame_layout;
   private SendActivity context;
   private static final float WEI_PER_ETH = (float)1000000000000000000.0;
   private static final int GAS_LIMIT = 35000;
@@ -67,7 +71,13 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_send);
+    overlay_frame_layout = new FrameLayout(getApplicationContext());
+    setContentView(overlay_frame_layout);
+    View activity_send_view = getLayoutInflater().inflate(R.layout.activity_send, overlay_frame_layout, false);
+    setContentView(activity_send_view);
+    Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+    setSupportActionBar(toolbar);
+    //
     context = this;
     hex = new Hex();
     preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
@@ -90,10 +100,15 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       EditText data_view = (EditText) findViewById(R.id.data);
       data_view.setText(data);
     }
-  //sanity check
+    //sanity check
     if (to_addr.length() != 42) {
       this.finish();
     }
+  }
+
+  public boolean onCreateOptionsMenu(Menu menu) {
+    //no options menu
+    return(false);
   }
 
 

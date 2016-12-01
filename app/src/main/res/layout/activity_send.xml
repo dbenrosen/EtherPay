@@ -10,24 +10,34 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.bringcommunications.etherpay.SendActivity">
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:layout_alignParentTop="true"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:textStyle="bold"
         android:text="to: "
-        android:id="@+id/to_addr_prompt" />
+        android:id="@+id/to_addr_prompt"
+        android:layout_below="@id/toolbar"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:layout_marginLeft="22dp"
-        android:layout_alignParentTop="true"
         android:singleLine="true"
         android:text="-- recipeient addr --"
         android:id="@+id/to_addr"
         android:layout_toRightOf="@+id/size_prompt"
+        android:layout_below="@id/toolbar"
         />
 
     <TextView

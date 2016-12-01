@@ -12,7 +12,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 
 public class ReceiveActivity extends AppCompatActivity {
 
+    private FrameLayout overlay_frame_layout;
     private SharedPreferences preferences;
     TextView instructions_view;
     private String acct_addr = "";
@@ -32,7 +37,14 @@ public class ReceiveActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_receive);
+
+        overlay_frame_layout = new FrameLayout(getApplicationContext());
+        setContentView(overlay_frame_layout);
+        View activity_receive_view = getLayoutInflater().inflate(R.layout.activity_receive, overlay_frame_layout, false);
+        setContentView(activity_receive_view);
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         instructions_view = (TextView) findViewById(R.id.instructions);
         String instructions = getResources().getString(R.string.receive_qr_prompt);
         instructions_view.setText(instructions);
@@ -42,6 +54,12 @@ public class ReceiveActivity extends AppCompatActivity {
         qr_bitmap = QRCode.from(acct_addr).bitmap();
         qr_code_view.setImageBitmap(qr_bitmap);
     }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //no options menu
+        return(false);
+    }
+
 
     public void do_share(View view) {
         do_share_wrapper();

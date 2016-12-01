@@ -6,6 +6,15 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent">
 
+  <android.support.v7.widget.Toolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="?attr/actionBarSize"
+      android:background="?attr/colorPrimary"
+      android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+      android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+      android:layout_alignParentTop="true"/>
+
   <TextView
       android:id="@+id/instructions"
       android:text=""
@@ -14,7 +23,8 @@
       android:layout_marginLeft="22dp"
       android:layout_marginRight="22dp"
       android:layout_marginTop="22dp"
-      android:layout_marginBottom="22dp">
+      android:layout_marginBottom="22dp"
+      android:layout_below="@id/toolbar">
   </TextView>
 
   <FrameLayout
