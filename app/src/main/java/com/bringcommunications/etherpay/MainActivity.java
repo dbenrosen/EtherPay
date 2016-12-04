@@ -187,6 +187,31 @@
     }
 
 
+    public void do_payments(View view) {
+      if (acct_addr.isEmpty()) {
+        String msg = getResources().getString(R.string.no_acct);
+        Util.show_err(getBaseContext(), msg, 5);
+        return;
+      }
+      Intent intent = new Intent(this, HistoryActivity.class);
+      intent.putExtra("SHOW_RECEIVED", false);
+      intent.putExtra("SHOW_SENT", true);
+      startActivity(intent);
+    }
+
+    public void do_received(View view) {
+      if (acct_addr.isEmpty()) {
+        String msg = getResources().getString(R.string.no_acct);
+        Util.show_err(getBaseContext(), msg, 5);
+        return;
+      }
+      Intent intent = new Intent(this, HistoryActivity.class);
+      intent.putExtra("SHOW_RECEIVED", true);
+      intent.putExtra("SHOW_SENT", false);
+      startActivity(intent);
+    }
+
+
     public void schedule_refresh() {
       new CountDownTimer(10000, 5000) {
         public void onTick(long millisUntilFinished) {

@@ -31,22 +31,28 @@ class Transaction_Array_Adapter extends ArrayAdapter<Transaction_Info> {
 		String txid = "";
 		String addr = "";
 		float size = 0;
+		int icon = -1;
+
 		if (values != null) {
 			Transaction_Info transaction_info = values[position];
 			date_str = formatDateTime(context, transaction_info.date.getTimeInMillis(), FORMAT_SHOW_DATE | FORMAT_SHOW_TIME | FORMAT_NUMERIC_DATE);
 			txid = "txid: " + transaction_info.txid;
 			size = transaction_info.size;
-			if (acct_addr.equals(transaction_info.to))
+			if (acct_addr.equals(transaction_info.to)) {
 				addr = "from: " + transaction_info.from;
-			else if (acct_addr.equals(transaction_info.from))
+				icon = R.drawable.ic_savings;
+			} else if (acct_addr.equals(transaction_info.from)) {
 				addr = "to: " + transaction_info.to;
-			else
+				icon = R.drawable.ic_etherpay;
+			} else {
 				addr = "transaction to/from unrelated addresses!";
+			}
         }
 		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View row_view = inflater.inflate(R.layout.transaction_list_item, parent, false);
         ImageView icon_view = (ImageView)row_view.findViewById(R.id.icon);
-        //icon_view.setImageResource(R.drawable.windowsmobile_logo);
+		if (icon >= 0)
+        	icon_view.setImageResource(icon);
 		TextView date_view = (TextView)row_view.findViewById(R.id.date);
 		date_view.setText(date_str);
         TextView amount_view = (TextView)row_view.findViewById(R.id.amount);

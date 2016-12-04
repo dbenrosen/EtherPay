@@ -2,18 +2,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginLeft="22dp"
-        android:id="@+id/icon" />
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="11dp"
         android:layout_toRightOf="@id/icon"
+        android:layout_alignBottom="@+id/icon"
         android:textSize="18sp"
         android:textStyle="bold"
         android:text="01/01/2016 - 12:03"
@@ -23,6 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="11dp"
         android:layout_toRightOf="@id/date"
+        android:layout_alignBottom="@+id/icon"
         android:textSize="18sp"
         android:textStyle="bold"
         android:text="0.0020 ETH"
@@ -47,5 +42,15 @@
         android:id="@+id/addr"
         android:layout_below="@id/txid"
         />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        android:src="@drawable/ic_savings"
+        android:id="@+id/icon"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/txid"
+        android:layout_alignStart="@+id/txid" />
 
 </RelativeLayout>
