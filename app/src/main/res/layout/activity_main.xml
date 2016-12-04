@@ -72,19 +72,6 @@
         android:layout_below="@+id/wallet_id"
         />
 
-    <ImageButton
-        android:text="refresh"
-        android:layout_marginLeft="33dp"
-        android:src="@drawable/ic_icon_refresh_128"
-        android:layout_marginRight="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/refresh_button"
-        android:onClick="do_refresh"
-        android:layout_toRightOf="@id/balance"
-        android:layout_alignBottom="@id/balance"
-        />
-
     <TextView
         android:text="0.00 USD"
         android:layout_marginTop="8dp"
@@ -98,6 +85,20 @@
         android:layout_below="@+id/balance"
         android:layout_alignLeft="@+id/pay_button"
         android:layout_alignStart="@+id/pay_button"
+        />
+
+    <ImageButton
+        android:text="refresh"
+        android:layout_marginLeft="33dp"
+        android:src="@drawable/ic_icon_refresh_128"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginRight="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/refresh_button"
+        android:onClick="do_refresh"
+        android:layout_toRightOf="@id/balance"
+        android:layout_alignTop="@id/balance"
         />
 
     <TextView

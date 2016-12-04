@@ -20,6 +20,7 @@
   import android.content.DialogInterface;
   import android.content.Intent;
   import android.content.SharedPreferences;
+  import android.graphics.Color;
   import android.os.AsyncTask;
   import android.os.Bundle;
   import android.os.CountDownTimer;
@@ -33,6 +34,7 @@
   import android.view.animation.AlphaAnimation;
   import android.view.animation.Animation;
   import android.widget.FrameLayout;
+  import android.widget.ImageButton;
   import android.widget.TextView;
   import android.widget.Toast;
 
@@ -230,6 +232,8 @@
         Util.show_err(getBaseContext(), msg, 5);
         return;
       }
+      ImageButton refresh_button = (ImageButton) findViewById(R.id.refresh_button);
+      refresh_button.setBackgroundColor(Color.GRAY);
       long now_sec = System.currentTimeMillis() / 1000;
       if (view != null || nonce < last_nonce) {
         if (now_sec - last_refresh_sec < 5) {
@@ -246,8 +250,8 @@
         }
       } else if (last_balance_sec < last_nonce_sec) {
         last_refresh_sec = now_sec;
-	if (toast != null)
-	    toast.cancel();
+    	if (toast != null)
+	      toast.cancel();
         (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
         String balance_parms[] = new String[2];
         balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
@@ -255,20 +259,21 @@
         new HTTP_Query_Task(this, context).execute(balance_parms);
       } else if (last_price_sec < last_nonce_sec) {
         last_refresh_sec = now_sec;
-	if (toast != null)
-	  toast.cancel();
+	    if (toast != null)
+	      toast.cancel();
         (toast = Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT)).show();
         String price_parms[] = new String[2];
         price_parms[0] = "https://etherchain.org/api/basic_stats";
         price_parms[1] = "price-refresh";
         new HTTP_Query_Task(this, context).execute(price_parms);
       } else {
+        refresh_button.setBackgroundColor(Color.TRANSPARENT);
         if (refresh_mode) {
           refresh_mode = false;
           dsp_balance();
         }
-	if (toast != null)
-	  toast.cancel();
+	    if (toast != null)
+	      toast.cancel();
         Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT).show();
       }
     }
