@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -51,7 +53,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   private FrameLayout overlay_frame_layout;
   private SendActivity context;
   private static final float WEI_PER_ETH = (float)1000000000000000000.0;
-  private static final int GAS_LIMIT = 35000;
+  private static final int DEFAULT_GAS_LIMIT = 35000;
   private SharedPreferences preferences;
   private Hex hex;
   //inputs
@@ -59,12 +61,14 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   private String private_key = "";
   private String to_addr = "";
   private String auto_pay = "";
+  private boolean show_gas = false;
   private float size;
   private String data = "";
   private float balance;
   private float price;
   //we set these
   private long gas_price;
+  private long gas_limit = DEFAULT_GAS_LIMIT;
   private long nonce;
   private String txid;
   
@@ -73,12 +77,6 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     super.onCreate(savedInstanceState);
     overlay_frame_layout = new FrameLayout(getApplicationContext());
     setContentView(overlay_frame_layout);
-    View activity_send_view = getLayoutInflater().inflate(R.layout.activity_send, overlay_frame_layout, false);
-    setContentView(activity_send_view);
-    Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
-    toolbar.setTitle("EtherPay - Send Payment");
-    toolbar.setBackgroundResource(R.color.etherpay_blue);
-    setSupportActionBar(toolbar);
     //
     context = this;
     hex = new Hex();
@@ -87,16 +85,31 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     acct_addr = preferences.getString("acct_addr", acct_addr);
     balance = preferences.getFloat("balance", balance);
     price = preferences.getFloat("price", price);
+    show_gas = preferences.getBoolean("show_gas", show_gas);
     auto_pay = getIntent().getStringExtra("AUTO_PAY");
     to_addr = getIntent().getStringExtra("TO_ADDR");
+    //
+    int layout = show_gas ? R.layout.activity_send_gas : R.layout.activity_send;
+    View activity_send_view = getLayoutInflater().inflate(layout, overlay_frame_layout, false);
+    setContentView(activity_send_view);
+    Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+    toolbar.setTitle("EtherPay - Send Payment");
+    toolbar.setBackgroundResource(R.color.etherpay_blue);
+    setSupportActionBar(toolbar);
+    //
     TextView to_addr_view = (TextView) findViewById(R.id.to_addr);
-    //String to_addr_str = to_addr.substring(0, 20) + " ...";
     to_addr_view.setText(to_addr);
     String size_str = getIntent().getStringExtra("SIZE");
     size = Float.valueOf(size_str);
     TextView size_view = (TextView) findViewById(R.id.size);
     size_str = String.format("%1.03f", size);
     size_view.setText(size_str);
+    if (show_gas) {
+      TextView gas_view = (TextView) findViewById(R.id.gas);
+      String gas_str = String.format("%7d", gas_limit);
+      gas_view.setText(gas_str);
+    }
+    //
     data = getIntent().getStringExtra("DATA");
     if (!data.isEmpty()) {
       EditText data_view = (EditText) findViewById(R.id.data);
@@ -108,11 +121,32 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     }
   }
 
+  //returns false => no options menu
   public boolean onCreateOptionsMenu(Menu menu) {
-    //no options menu
-    return(false);
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.send_options, menu);
+    menu.findItem(R.id.show_gas).setChecked(show_gas);
+    return(true);
   }
 
+
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.show_gas:
+        boolean show_gas = item.isChecked() ? false : true;
+        item.setChecked(show_gas);
+        SharedPreferences.Editor preferences_editor = preferences.edit();
+        preferences_editor.putBoolean("show_gas", show_gas);
+        preferences_editor.apply();
+        recreate();
+        return true;
+      case R.id.payment_help:
+        show_pay_help_dialog();
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
+    }
+  }
 
   public void onResume() {
     super.onResume();  // Always call the superclass method first
@@ -169,12 +203,31 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     }
   }
 
-    public void do_data_help(View view) {
-      String help_text = "Use this field to attach identifting information to this payment. For example, " +
-              "if you are paying a bill at a restaurant, you might enter your table number here.";
-      //Toast.makeText(context, help_text, Toast.LENGTH_LONG).show();
-      Util.show_err(getBaseContext(), help_text, 5);
-    }
+  private void show_pay_help_dialog() {
+    android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(context);
+    alertDialogBuilder.setTitle("About Ether Payments");
+    alertDialogBuilder.setMessage(getResources().getString(R.string.pay_help));
+    alertDialogBuilder.setCancelable(false);
+    alertDialogBuilder.setNeutralButton("OK",
+            new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog,int id) {
+                dialog.cancel();
+              }
+            });
+    android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+    alertDialog.show();
+  }
+
+
+  public void do_gas_help(View view) {
+    String help_text = getResources().getString(R.string.pay_gas_help);
+    Util.show_err(getBaseContext(), help_text, 15);
+  }
+
+  public void do_data_help(View view) {
+      String help_text = getResources().getString(R.string.pay_data_help);
+      Util.show_err(getBaseContext(), help_text, 7);
+  }
 
     public void do_pay(View view) {
       //validate size... we check for sufficient balance later...
@@ -183,6 +236,20 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       if (size == 0) {
           Toast.makeText(context, "Cannot send zero ETH", Toast.LENGTH_LONG).show();
           return;
+      }
+      if (show_gas) {
+        TextView gas_view = (TextView) findViewById(R.id.gas);
+        String gas_limit_str = gas_view.getText().toString().trim();
+        try {
+          gas_limit = Long.valueOf(gas_limit_str);
+        } catch (NumberFormatException e) {
+          Toast.makeText(context, "Unable to parse Gas limit: " + gas_limit_str, Toast.LENGTH_LONG).show();
+          return;
+        }
+      }
+      if (gas_limit < DEFAULT_GAS_LIMIT) {
+        Toast.makeText(context, "Gas limit is too low -- transaction might not succeed!", Toast.LENGTH_LONG).show();
+        return;
       }
       //validate to_addr
       if (!to_addr.startsWith("0x") || to_addr.length() != 42) {
@@ -201,7 +268,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   public void handle_http_rsp(String callback, String rsp) {
     if (callback.equals("gas")) {
       set_gas(rsp);
-      float max_gas = (GAS_LIMIT * gas_price) / WEI_PER_ETH;
+      float max_gas = (gas_limit * gas_price) / WEI_PER_ETH;
       if (size + max_gas > balance) {
         String balance_str = String.format("%1.06f", balance);
         String size_str = String.format("%1.06f", size);
@@ -321,7 +388,6 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
 
   //step 2 in send -- just call create_and_broadcast_transaction passing the user's transaction data
   private void send_to_2() {
-    float max_gas = (GAS_LIMIT * gas_price) / WEI_PER_ETH;
     ++nonce;
     create_and_broadcast_transaction(gas_price, nonce, to_addr, data, size, "broadcast");
   }
@@ -329,7 +395,6 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
 
   private void create_and_broadcast_transaction(long gas_price, long nonce, String to_addr, String data, float size, String callback) {
     //this is sufficient for simple transactions, even if they include a little data. it is ~0.01 cents
-    long gas_limit = GAS_LIMIT;
     long wei = (long)(size * WEI_PER_ETH);
     String to_addr_no_0x = to_addr.startsWith("0x") ? to_addr.substring(2) : to_addr;
     //create signed transaction

@@ -92,6 +92,7 @@
       preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
     }
 
+    //returns false => no options menu
     public boolean onCreateOptionsMenu(Menu menu) {
       MenuInflater inflater = getMenuInflater();
       inflater.inflate(R.menu.main_options, menu);

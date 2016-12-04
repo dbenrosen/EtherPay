@@ -19,6 +19,11 @@
         android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         android:layout_alignParentTop="true"/>
 
+
+<!--
+    ADDR
+    -->
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -42,6 +47,10 @@
         android:layout_alignTop="@id/to_addr_prompt"
         />
 
+
+    <!--
+        AMOUNT
+        -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -85,6 +94,69 @@
         />
 
 
+    <!--
+        GAS
+        -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:text="gas: "
+        android:id="@+id/gas_prompt"
+        android:layout_below="@id/size"
+        android:layout_alignBottom="@+id/gas_help"
+        />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_help0"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginTop="22dp"
+        android:layout_marginLeft="2dp"
+        android:id="@+id/gas_help"
+        android:layout_toRightOf="@id/gas_prompt"
+        android:layout_below="@id/size"
+        android:onClick="do_gas_help"
+        />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:textSize="18sp"
+        android:singleLine="true"
+        android:text="0000000"
+        android:maxLength="9"
+        android:minEms="5"
+        android:inputType="number"
+        android:id="@+id/gas"
+        android:layout_toRightOf="@id/gas_help"
+        android:layout_below="@id/size"
+        android:layout_alignBottom="@+id/gas_prompt"
+        android:layout_alignLeft="@id/size"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginRight="22dp"
+        android:text="GAS"
+        android:id="@+id/GAS"
+        android:layout_toRightOf="@id/gas"
+        android:layout_below="@id/size"
+        android:layout_alignLeft="@id/ETH"
+        android:layout_alignBaseline="@+id/gas_prompt"
+        />
+
+
+    <!--
+        DATA
+        -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -93,7 +165,7 @@
         android:textStyle="bold"
         android:text="data: "
         android:id="@+id/data_prompt"
-        android:layout_below="@id/size"
+        android:layout_below="@id/gas"
         android:layout_alignBottom="@+id/data_help"
         />
 
@@ -107,7 +179,8 @@
         android:layout_marginRight="8dp"
         android:id="@+id/data_help"
         android:layout_toRightOf="@id/data_prompt"
-        android:layout_below="@id/size"
+        android:layout_alignLeft="@id/gas_help"
+        android:layout_below="@id/gas"
         android:onClick="do_data_help"
         />
 
@@ -125,10 +198,15 @@
         android:maxEms="15"
         android:id="@+id/data"
         android:layout_toRightOf="@id/data_help"
-        android:layout_below="@id/size"
+        android:layout_below="@id/gas"
         android:layout_alignBottom="@+id/data_prompt"
         />
 
+
+
+    <!--
+        PAY BUTTON
+        -->
     <Button
         android:text="Pay"
         android:layout_width="wrap_content"
