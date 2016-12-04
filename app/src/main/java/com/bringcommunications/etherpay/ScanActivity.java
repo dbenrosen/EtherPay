@@ -77,6 +77,10 @@ public class ScanActivity
         View activity_scan_view = getLayoutInflater().inflate(R.layout.activity_scan, overlay_frame_layout, false);
         setContentView(activity_scan_view);
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        //The internal implementation of the support library just checks if the Toolbar has a title (not null) at the moment the SupportActionBar is
+        //set up. If there is, then this title will be used instead of the window title. You can then set a dummy title while you load the real title.
+        toolbar.setTitle("");
+        toolbar.setBackgroundResource(R.color.etherpay_blue);
         setSupportActionBar(toolbar);
         //
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -88,6 +92,7 @@ public class ScanActivity
         scanner.setConfig(0, Config.X_DENSITY, 3);
         scanner.setConfig(0, Config.Y_DENSITY, 3);
         //
+        toolbar.setTitle(target_activity.equals("SendActivity") ? "EtherPay - Send Payment" : "EtherPay - Import Account");
         instructions_view = (TextView)findViewById(R.id.instructions);
         instructions_view.setText(scan_prompt);
         barcodeScanned = false;

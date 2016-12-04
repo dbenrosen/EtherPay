@@ -43,6 +43,8 @@ public class ReceiveActivity extends AppCompatActivity {
         View activity_receive_view = getLayoutInflater().inflate(R.layout.activity_receive, overlay_frame_layout, false);
         setContentView(activity_receive_view);
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        toolbar.setTitle("EtherPay - Receive Payment");
+        toolbar.setBackgroundResource(R.color.etherpay_blue);
         setSupportActionBar(toolbar);
 
         instructions_view = (TextView) findViewById(R.id.instructions);

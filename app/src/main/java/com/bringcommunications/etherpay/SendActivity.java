@@ -76,6 +76,8 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     View activity_send_view = getLayoutInflater().inflate(R.layout.activity_send, overlay_frame_layout, false);
     setContentView(activity_send_view);
     Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+    toolbar.setTitle("EtherPay - Send Payment");
+    toolbar.setBackgroundResource(R.color.etherpay_blue);
     setSupportActionBar(toolbar);
     //
     context = this;

@@ -3,6 +3,10 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="etherpay_blue">#94cee3</color>
+    <!--
+    <color name="etherpay_blue">#33b5e5</color>
+    -->
 
     <!-- these colors are defined for the MobileVisionBarcodeScanner -->
     <color name="color_green">#14808d</color>

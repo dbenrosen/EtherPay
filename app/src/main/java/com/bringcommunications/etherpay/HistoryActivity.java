@@ -80,6 +80,10 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
     View activity_history_view = getLayoutInflater().inflate(R.layout.activity_history, overlay_frame_layout, false);
     setContentView(activity_history_view);
     Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+    //The internal implementation of the support library just checks if the Toolbar has a title (not null) at the moment the SupportActionBar is
+    //set up. If there is, then this title will be used instead of the window title. You can then set a dummy title while you load the real title.
+    toolbar.setTitle("");
+    toolbar.setBackgroundResource(R.color.etherpay_blue);
     setSupportActionBar(toolbar);
     //
     context = this;
@@ -88,6 +92,7 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
     show_sent = getIntent().getBooleanExtra("SHOW_SENT", false);
     show_received = getIntent().getBooleanExtra("SHOW_RECEIVED", false);
     (toast = Toast.makeText(context, "retreiving transactions...", Toast.LENGTH_LONG)).show();
+    toolbar.setTitle(show_sent ? "EtherPay - Payments Sent" : "EtherPay - Payments Received");
   }
 
   public boolean onCreateOptionsMenu(Menu menu) {

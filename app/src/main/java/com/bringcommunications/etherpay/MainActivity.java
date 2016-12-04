@@ -84,6 +84,7 @@
       View activity_main_view = getLayoutInflater().inflate(R.layout.activity_main, overlay_frame_layout, false);
       setContentView(activity_main_view);
       Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+      toolbar.setBackgroundResource(R.color.etherpay_blue);
       setSupportActionBar(toolbar);
       context = this;
       preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
