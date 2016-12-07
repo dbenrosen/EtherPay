@@ -88,6 +88,9 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     show_gas = preferences.getBoolean("show_gas", show_gas);
     auto_pay = getIntent().getStringExtra("AUTO_PAY");
     to_addr = getIntent().getStringExtra("TO_ADDR");
+    String size_str = getIntent().getStringExtra("SIZE");
+    size = Float.valueOf(size_str);
+    data = getIntent().getStringExtra("DATA");
     //
     int layout = show_gas ? R.layout.activity_send_gas : R.layout.activity_send;
     View activity_send_view = getLayoutInflater().inflate(layout, overlay_frame_layout, false);
@@ -99,8 +102,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     //
     TextView to_addr_view = (TextView) findViewById(R.id.to_addr);
     to_addr_view.setText(to_addr);
-    String size_str = getIntent().getStringExtra("SIZE");
-    size = Float.valueOf(size_str);
+    //
     TextView size_view = (TextView) findViewById(R.id.size);
     size_str = String.format("%1.03f", size);
     size_view.setText(size_str);
@@ -110,7 +112,6 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       gas_view.setText(gas_str);
     }
     //
-    data = getIntent().getStringExtra("DATA");
     if (!data.isEmpty()) {
       EditText data_view = (EditText) findViewById(R.id.data);
       data_view.setText(data);

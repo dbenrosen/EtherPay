@@ -213,12 +213,22 @@ public class ScanActivity
             switch (target_activity){
                 case "SendActivity": {
                     Intent intent = new Intent(this, SendActivity.class);
+		    //many QR codes simple contain the address, (eg 0x....); but i've seen this format also:
+		    //ethereum:<address>[?value=<value>][?gas=<suggestedGas>]
+		    String to_addr = scanned_data;
                     if (scanned_data.contains(":0x")) {
-                        int colon_idx = scanned_data.indexOf(':');
-                        scanned_data = scanned_data.substring(colon_idx + 1);
+                        int addr_idx = scanned_data.indexOf(':') + 1;
+			int end_idx = scanned_data.indexOf('?', addr_idx);
+			to_addr = (end_idx < 0) ? scanned_data.substring(addr_idx) : scanned_data.substring(addr_idx, end_idx);
                     }
-                    intent.putExtra("TO_ADDR", scanned_data);
-                    intent.putExtra("SIZE", "0");
+		    String size_str = "0";
+		    if (scanned_data.contains("value=")) {
+		      int size_idx = scanned_data.indexOf("value=") + "value=".length() + 1;
+		      int end_idx = scanned_data.indexOf('?', size_idx);
+		      size_str = (end_idx < 0) ? scanned_data.substring(size_idx) : scanned_data.substring(size_idx, end_idx);
+		    }
+                    intent.putExtra("TO_ADDR", to_addr);
+                    intent.putExtra("SIZE", size_str);
                     intent.putExtra("DATA", "");
                     intent.putExtra("AUTO_PAY", "");
                     //finish scanactivity so back key doesn't bring us back here
