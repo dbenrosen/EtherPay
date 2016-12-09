@@ -70,7 +70,8 @@
     private long last_balance_sec = 0;
     private long last_pay_sec = 0;
     private long last_nonce = 0;
-    private long nonce = -1;
+    //first payment nonce is 0; so if you've never made a payment then we call that -1; lt -1 means we'be never even tried to update
+    private long nonce = -2;
     private boolean refresh_mode = false;
     private SharedPreferences preferences;
     private FrameLayout overlay_frame_layout;
@@ -160,7 +161,7 @@
               acct_addr = "";
             } else {
               refresh_mode = true;
-              last_nonce = 0;
+              last_nonce = -1;
               balance = 0;
               SharedPreferences.Editor preferences_editor = preferences.edit();
               preferences_editor.putString("acct_addr", acct_addr);
@@ -171,7 +172,7 @@
           }
         }
         if (acct_addr.isEmpty()) {
-          last_nonce = 0;
+          last_nonce = -1;
           balance = 0;
         }
         dsp_balance();
@@ -434,7 +435,7 @@
       //  }
       // ]
       //}
-      nonce = -1;
+      boolean got_nonce = false;
       if (nonce_rsp.contains("accountNonce")) {
         nonce_rsp = nonce_rsp.replaceAll("\"", "");
         int field_idx = nonce_rsp.indexOf("accountNonce") + "accountNonce".length();
@@ -444,6 +445,7 @@
         if (!nonce_str.equals("null")) {
           nonce = Long.valueOf(nonce_str);
           last_nonce_sec = System.currentTimeMillis() / 1000;
+          got_nonce = true;
         }
       } else if (nonce_rsp.contains("status")) {
         int field_idx = nonce_rsp.indexOf("status") + "status".length();
@@ -452,17 +454,19 @@
         String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
         if (status_str.equals("1")) {
           //no error, but no nonce data.... the account has necer been used
-          nonce = 0;
+          nonce = -1;
           last_nonce_sec = System.currentTimeMillis() / 1000;
+          got_nonce = true;
         }
       }
-      if (nonce < 0) {
-        nonce = 0;
+      if (!got_nonce) {
+        //if we keep it -2, then we'll continue trying to refresh.... perhaps it's better to just
+        //assume that no payments have been made.
+        nonce = -1;
         Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
         Util.show_err(getBaseContext(), nonce_rsp, 10);
       }
     }
-
 
 
     private void set_balance(String rsp) {

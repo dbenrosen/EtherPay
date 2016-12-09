@@ -70,7 +70,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   private long gas_price;
   private long gas_limit = DEFAULT_GAS_LIMIT;
   private long nonce;
-  private String txid;
+  private String txid = "";
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -280,8 +280,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       }
       send_to_1();
     } else if (callback.equals("nonce")) {
-      set_nonce(rsp);
-      if (nonce < 0) {
+      if (!set_nonce(rsp)) {
         //error occurred. dsp_txid will show error message and exit
         dsp_txid_and_exit();
       }
@@ -318,7 +317,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     }
   }
 
-  private void set_nonce(String nonce_rsp) {
+  private boolean set_nonce(String nonce_rsp) {
     //typical response id:
     //{
     // "status": 1,
@@ -328,16 +327,17 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     //  }
     // ]
     //}
-    nonce = -1;
+    boolean got_nonce = false;
     if (nonce_rsp.contains("accountNonce")) {
       nonce_rsp = nonce_rsp.replaceAll("\"", "");
       int field_idx = nonce_rsp.indexOf("accountNonce") + "accountNonce".length();
       int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
       int end_idx = nonce_rsp.indexOf('}', beg_idx);
       String nonce_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-      if (!nonce_str.equals("null"))
-    	nonce = Long.valueOf(nonce_str);
-      //Toast.makeText(context, "nonce = " + nonce, Toast.LENGTH_LONG).show();
+      if (!nonce_str.equals("null")) {
+        nonce = Long.valueOf(nonce_str);
+        got_nonce = true;
+      }
     } else if (nonce_rsp.contains("status")) {
       int field_idx = nonce_rsp.indexOf("status") + "status".length();
       int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
@@ -345,14 +345,18 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
       if (status_str.equals("1")) {
         //no error, but no nonce data.... the account has necer been used
-        nonce = 0;
+        nonce = -1;
+        got_nonce = true;
       }
     }
-    if (nonce < 0) {
-      nonce = 0;
+    if (!got_nonce) {
+      nonce = -1;
       Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
       Util.show_err(getBaseContext(), nonce_rsp, 10);
     }
+    if (BuildConfig.DEBUG)
+      System.out.println("nonce rsp: " + nonce_rsp);
+    return(got_nonce);
   }
 
   private void set_txid(String broadcast_rsp) {  
@@ -369,7 +373,8 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       int beg_idx = broadcast_rsp.indexOf(':', field_idx) + 1;
       int end_idx = broadcast_rsp.indexOf(',', beg_idx);
       txid = broadcast_rsp.substring(beg_idx, end_idx).trim();
-      //System.out.println("txid: " + txid);
+      if (BuildConfig.DEBUG)
+        System.out.println("txid: " + txid);
     } else {
       Util.show_err(getBaseContext(), "error broadcasting transaction!", 3);
       Util.show_err(getBaseContext(), broadcast_rsp, 10);
