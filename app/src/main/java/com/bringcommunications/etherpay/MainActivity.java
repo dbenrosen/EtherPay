@@ -236,7 +236,7 @@
       ImageButton refresh_button = (ImageButton) findViewById(R.id.refresh_button);
       refresh_button.setBackgroundColor(Color.GRAY);
       long now_sec = System.currentTimeMillis() / 1000;
-      if (view != null || nonce < last_nonce) {
+      if (view != null || nonce < last_nonce)  {
         if (now_sec - last_refresh_sec < 5) {
           Toast.makeText(context, "continuing refresh.... (" + nonce + "/" + last_nonce + ")", Toast.LENGTH_LONG).show();
           schedule_refresh();
@@ -301,7 +301,7 @@
           new HTTP_Query_Task(this, context).execute(parms);
         }
       }
-      if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec < 10)) {
+      if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec > 120)) {
     	if (toast != null)
           toast.cancel();
         (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
@@ -434,7 +434,7 @@
       //  }
       // ]
       //}
-      nonce = 0;
+      nonce = -1;
       if (nonce_rsp.contains("accountNonce")) {
         nonce_rsp = nonce_rsp.replaceAll("\"", "");
         int field_idx = nonce_rsp.indexOf("accountNonce") + "accountNonce".length();
@@ -445,7 +445,19 @@
           nonce = Long.valueOf(nonce_str);
           last_nonce_sec = System.currentTimeMillis() / 1000;
         }
-      } else {
+      } else if (nonce_rsp.contains("status")) {
+        int field_idx = nonce_rsp.indexOf("status") + "status".length();
+        int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
+        int end_idx = nonce_rsp.indexOf(',', beg_idx);
+        String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
+        if (status_str.equals("1")) {
+          //no error, but no nonce data.... the account has necer been used
+          nonce = 0;
+          last_nonce_sec = System.currentTimeMillis() / 1000;
+        }
+      }
+      if (nonce < 0) {
+        nonce = 0;
         Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
         Util.show_err(getBaseContext(), nonce_rsp, 10);
       }
@@ -469,6 +481,7 @@
       //  }
       // ]
       //}
+      boolean got_balance = false;
       if (rsp.contains("balance")) {
         int field_idx = rsp.indexOf("balance") + "balance".length();
         int beg_idx = rsp.indexOf(':', field_idx) + 1;
@@ -477,8 +490,21 @@
         if (!balance_str.equals("null")) {
           balance = Float.valueOf(balance_str) / WEI_PER_ETH;
           last_balance_sec = System.currentTimeMillis() / 1000;
+          got_balance = true;
         }
-      } else {
+      } else if (rsp.contains("status")) {
+        int field_idx = rsp.indexOf("status") + "status".length();
+        int beg_idx = rsp.indexOf(':', field_idx) + 1;
+        int end_idx = rsp.indexOf(',', beg_idx);
+        String status_str = rsp.substring(beg_idx, end_idx).trim();
+        if (status_str.equals("1")) {
+          //no error, but no balance data.... the account has necer been used
+          balance = 0;
+          last_balance_sec = System.currentTimeMillis() / 1000;
+          got_balance = true;
+        }
+      }
+      if (!got_balance) {
         Util.show_err(getBaseContext(), "error retreiving balance!", 3);
         Util.show_err(getBaseContext(), rsp, 10);
       }

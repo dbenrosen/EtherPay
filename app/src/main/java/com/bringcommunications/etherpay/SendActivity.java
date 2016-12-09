@@ -338,7 +338,18 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       if (!nonce_str.equals("null"))
     	nonce = Long.valueOf(nonce_str);
       //Toast.makeText(context, "nonce = " + nonce, Toast.LENGTH_LONG).show();
-    } else {
+    } else if (nonce_rsp.contains("status")) {
+      int field_idx = nonce_rsp.indexOf("status") + "status".length();
+      int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
+      int end_idx = nonce_rsp.indexOf(',', beg_idx);
+      String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
+      if (status_str.equals("1")) {
+        //no error, but no nonce data.... the account has necer been used
+        nonce = 0;
+      }
+    }
+    if (nonce < 0) {
+      nonce = 0;
       Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
       Util.show_err(getBaseContext(), nonce_rsp, 10);
     }
