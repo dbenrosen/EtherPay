@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- this is margin above the header bar that introduces a batch of buttons.
+        for example, "history" on the sendactivity. the margin is greater for large
+        screens.
+         -->
+    <dimen name="header_margin_top">22dp</dimen>
+    <dimen name="button_min_height">48dp</dimen>
+
+</resources>

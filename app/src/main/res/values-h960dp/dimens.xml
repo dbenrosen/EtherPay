@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- when we display balance, we might display in different denominations (finney,
+	 eth, and usd) at different sizes -->
+    <dimen name="balance_text_size_big">28sp</dimen>    
+    <dimen name="balance_text_size_medium">24sp</dimen> 
+    <dimen name="balance_text_size_small">24sp</dimen>
+
+    <!-- this is margin above the header bar that introduces a batch of buttons.
+        for example, "history" on the sendactivity. the margin is greater for large
+        screens. -->
+    <dimen name="header_margin_top">12dp</dimen>
+    <dimen name="header_min_height">52dp</dimen>
+    <dimen name="header_text_size">28sp</dimen>
+
+    <dimen name="button_text_size_2line">30sp</dimen>
+    <dimen name="button_text_size_1line">34sp</dimen>
+
+</resources>
