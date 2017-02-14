@@ -102,6 +102,7 @@ public class SendActivity extends AppCompatActivity implements Payment_Processor
     show_gas = preferences.getBoolean("show_gas", show_gas);
     show_data = preferences.getBoolean("show_data", show_data);
     boolean denomination_eth = preferences.getBoolean("denomination_eth", true);
+    System.out.println("denomination_eth is " + denomination_eth);
     denomination = denomination_eth ? Denomination.ETH : Denomination.FINNEY;
     auto_pay = getIntent().getStringExtra("AUTO_PAY");
     to_addr = getIntent().getStringExtra("TO_ADDR");
@@ -114,9 +115,9 @@ public class SendActivity extends AppCompatActivity implements Payment_Processor
     setContentView(activity_send_view);
     //
     Spinner dropdown = (Spinner)findViewById(R.id.denomination);
-    String[] items = new String[] {"Finney", "ETH"};
+    String[] items = new String[] {"ETH", "Finney"};
     ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, items);
-    dropdown.setSelection((denomination == Denomination.ETH) ? 1 : 0);
+    dropdown.setSelection((denomination == Denomination.ETH) ? 0 : 1);
     dropdown.setOnItemSelectedListener(this);
     dropdown.setAdapter(adapter);
     //
@@ -216,20 +217,21 @@ public class SendActivity extends AppCompatActivity implements Payment_Processor
   }
 
 
-  //this onItemSelected is called when a new denominatino is selected from the denomination drop-down
+  //this onItemSelected is called when a new denomination is selected from the denomination drop-down
   @Override
   public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
     EditText size_view = (EditText) findViewById(R.id.size);
     String cur_size_str = size_view.getText().toString();
     float cur_size = Float.valueOf(cur_size_str);
     eth_size = (denomination == Denomination.ETH) ? cur_size : cur_size / 1000;
-    denomination = (position == 0) ? Denomination.FINNEY : Denomination.ETH;
+    denomination = (position == 0) ? Denomination.ETH : Denomination.FINNEY;
     if (denomination == Denomination.FINNEY) {
       eth_size = (float)((int)(eth_size * 1000 + 0.5)) / 1000;
     }
     boolean denomination_eth = (denomination == Denomination.ETH) ? true : false;
     SharedPreferences.Editor preferences_editor = preferences.edit();
     preferences_editor.putBoolean("denomination_eth", denomination_eth);
+    System.out.println("set denomination_eth to " + denomination_eth + ", id = " + id);
     preferences_editor.apply();
     String size_str = (denomination == Denomination.ETH) ? String.format("%1.03f", eth_size) : String.format("%03d", (int)(eth_size * 1000 + 0.5));
     size_view.setText(size_str);
