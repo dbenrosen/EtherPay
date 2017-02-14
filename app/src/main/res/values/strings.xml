@@ -1,21 +1,59 @@
 <resources>
     <string name="app_name">EtherPay</string>
+    <string name="app_uri">etherpay.bringcommunications.com</string>
     <string name="title_activity_send">SendActivity</string>
     <string name="no_acct">You have not set up an Ether account yet.
         Before using this app you need to import an Ether account using
         the "import account" menu item.
     </string>
-    <string name="scan_addr_prompt">
-    Scan the QR code that represents the reqipient address. Once the recipient
-    address has been identified, you will be able to specify the amount of Ether
-    that you would like to send.
-    </string>
-    <string name="scan_key_prompt">
-    Scan the QR code that represents the private key for the account that you want
-    to import.
-    \n\nHint: To get a QR code for the private key for your account, you can visit
-    https://www.myetherwallet.com and select the view-wallet-info tab.
-    </string>
+<string name="main_subtitle">
+</string>
+<string name="wallet_help_title">
+EtherPay Ether Wallet
+</string>
+<string name="wallet_help">
+  The EtherPay app, is an Ether wallet. That is, this app lets you access an Ether account.
+  You can check the balance of your Ether account; or send or receive Finney Ether to and
+  from other Ether addresses. You can also check the transaction history associated with
+  your account.
+</string>  
+<!-- subtitle in option bar for receive activity. receive activity is laos used to show qr
+  code for export acct -->
+<string name="receive_subtitle_receive">
+Receive Payment
+</string>
+<string name="receive_subtitle_export">
+Export Account
+</string>
+<string name="receive_err_no_media_access_msg">
+Unable to access media directory
+</string>
+<string name="receive_err_no_media_access_permission">
+We cannot share unless you provide access to external storeage
+</string>
+
+  <!-- subtitle in option bar for scan activity. subtitle depends on what we are scanning... -->
+<string name="scan_subtitle_send">
+Send Payment"
+</string>
+<string name="scan_subtitle_import">
+Import Account
+</string>
+<string name="cant_scan_cuz_no_access_msg">
+We cannot scan because we do not have permission to access the camera.
+</string>
+<string name="scan_addr_prompt">
+Scan the QR code that represents the reqipient address. Once the recipient
+address has been identified, you will be able to specify the amount of Finney
+(Ether) that you would like to send.
+</string>
+<string name="scan_key_prompt">
+Scan the QR code that represents the private key for the account that you want
+to import.
+\n\nHint: To get a QR code for the private key for your account, you can visit
+https://www.myetherwallet.com and select the view-wallet-info tab.
+</string>
+
     <string name="ask_delete_old_key">This version of Etherpay only supports
     a single account. If you import a new account, then you erase your
     current account &#8212; (the account still exists, of course, but you will need
@@ -58,6 +96,18 @@
       to help people adopt Ether as a general-use currency.
       \n\nDavid Rosen, author of EtherPay.
     </string>
+
+    <string name="export_acct_prompt">
+This QR Code represents the private key to your account. You can scan the QR Code into an
+Ether wallet, or into another smart-phone that is running Uncle Finney\'s Poker. You would
+do this to move your account to a different wallet. Also you can send the key to yourself
+to back it up, for example, to protect your account in case you break your phone.
+\n\nImportant: Do not share your private key. If you give someone your private key
+then they have access to ALL the funds in your account!
+\n\nNote: It is not recommended to play Uncle Finney\'s Poker from two different
+devices, using the same Ether account.
+</string>
+
     <string name="receive_qr_prompt">
     This QR code represents your public account address. You need to provide this address to
     any  person, in order for them to send you Ether. You can allow people to scan the address
@@ -81,22 +131,54 @@
     Use this field to attach identifting information to this payment. For example, if you are
     paying a bill at a restaurant, you might enter your table number here.
     </string>
-    <string name="pay_help">
-    On this screen you can make an Ether payment; that is, send Ether to the selected address.
-    \n\nBefore you click the \"Pay\" button, enter the amount of Ether that you would like to send.
-    You also have the option of attaching a short note to the payment. This note will be permanently
-    attached to the payment, and publicly visible. For example, if you are paying a bill at a
-    restaurant, you might enter your table number here.
-    \n\nEach Ether transaction includes a small fee called \"gas\", which pays for the computational
-    cost of executing the transaction on the Ethereum Virtual Machine. Gas is not demoninated in Ether;
-    to find the actual cost of a transaction in Ether, the gas is multiplied by a gas-price, which
-    is set by the Ethereum nodes. (The gas price is very small, at the time of this writing
-    appoximently 0.00000002 ETH/GAS).. Note that the transaction only specifies the maximum gas that can
-    be consumed; any gas that is not used is not dedcuted from your account.
-    \n\nThe simple Payment screen gives you the ability to send Ether to simple Ether addresses &#8212;
-    and it sets the gas limit to a reasonable, conservative value. But in some cases you might want to
-    send Ether to Ether Contracts, which might require much more processing. For those cases you should
-    enable \"Show Gas\" in the options menu. Then you can specify the maximum gas for your transaction.
-    </string>
+<string name="send_help_title">
+Sending Ether Payments
+</string>
+<string name="send_help">
+On this screen you can make an Ether payment; that is, send Ether to the selected address.
+\n\nBefore you click the \"Pay\" button, enter the amount that you would like to send. You
+Can choose to denominate the amount in either ETH or Finney (one thousand\'th of an Ether).
+\n\nIn the options menu you can check \"Show Data\." This will give you the ability to attach a
+short note to the payment. This note will be permanently attached to the payment, and publicly
+visible. For example, if you are paying a bill at a restaurant, you might enter your table number
+here.
+\n\nIn the options menu you can also check \"Show GAS\." Each Ether transaction includes a small
+fee called \"GAS\", which pays for the computational cost of executing the transaction on the
+Ethereum Virtual Machine. Gas is not demoninated in Ether; to find the actual cost of a transaction
+in Ether, the gas is multiplied by a gas-price, which is set by the Ethereum nodes. (The gas price
+is very small, at the time of this writing appoximently 0.00000002 ETH/GAS).. Note that the
+transaction only specifies the maximum gas that can be consumed; any gas that is not used is not
+dedcuted from your account.
+\n\nThe simple Payment screen gives you the ability to send Ether to simple Ether addresses &#8212;
+and it sets the gas limit to a reasonable, conservative value. But in some cases you might want to
+send Ether to Ether Contracts, which might require much more processing. For those cases you should
+enable \"Show Gas\" in the options menu. Then you can specify the maximum gas for your transaction.
+</string>
+<string name="size_help_title">
+Specifiy an Amount
+</string>
+<string name="size_help">
+Use this field to specify the amount of Finney (Ether) that you would like to send. You can
+denominate the amount in either Finney or ETH: One ETH is one thousand Finney.
+\n\nNote: In addition to the amount you send, a small transaction fee, approximately equal to
+1 Finney, will be dedcuted from your account.
+</string>
+<string name="gas_help_title">
+About GAS
+</string>
+<string name="gas_help">
+Use this field to specify the maximum gas that can be consumed by this transaction. For example,
+for a transfer to a simple Ether account I recommend a gas-limit of 35,000 GAS. Typically the
+transaction will consume less &#8212; about 21,000 GAS&#8230; A transaction to a Contract address might
+consume much more. For example, vDice.io recommends a gas limit of 180,000 GAS in order to send
+a payment to one of their betting contracts.
+</string>
+<string name="data_help_title">
+Adding Data to an Ether Payment
+</string>
+<string name="data_help">
+Use this field to attach identifting information to this payment. For example, if you are
+paying a bill at a restaurant, you might enter your table number here.
+</string>
 
 </resources>

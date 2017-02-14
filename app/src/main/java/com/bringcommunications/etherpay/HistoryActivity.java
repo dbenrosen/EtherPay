@@ -83,16 +83,19 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
     //The internal implementation of the support library just checks if the Toolbar has a title (not null) at the moment the SupportActionBar is
     //set up. If there is, then this title will be used instead of the window title. You can then set a dummy title while you load the real title.
     toolbar.setTitle("");
-    toolbar.setBackgroundResource(R.color.etherpay_blue);
+    toolbar.setBackgroundResource(R.color.color_toolbar);
     setSupportActionBar(toolbar);
     //
     context = this;
-    preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
+    String app_uri = getResources().getString(R.string.app_uri);    
+    preferences = getSharedPreferences(app_uri, MODE_PRIVATE);
     acct_addr = preferences.getString("acct_addr", acct_addr);
     show_sent = getIntent().getBooleanExtra("SHOW_SENT", false);
     show_received = getIntent().getBooleanExtra("SHOW_RECEIVED", false);
-    (toast = Toast.makeText(context, "retreiving transactions...", Toast.LENGTH_LONG)).show();
-    toolbar.setTitle(show_sent ? "EtherPay - Payments Sent" : "EtherPay - Payments Received");
+    (toast = Toast.makeText(context, "retrieving transactions...", Toast.LENGTH_LONG)).show();
+    String app_name = getResources().getString(R.string.app_name);
+    toolbar.setTitle(app_name);
+    toolbar.setSubtitle(show_sent ? "Payments Sent" : "Payments Received");
   }
 
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -142,7 +145,7 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
       idx = end_idx + 1;
     }
     if (status != 1) {
-      Util.show_err(getBaseContext(), "error retreiving transactions!", 3);
+      Util.show_err(getBaseContext(), "error retrieving transactions!", 3);
       Util.show_err(getBaseContext(), rsp.substring(0, 30), 10);
       return(0);
     }

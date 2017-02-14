@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">      
+    <item android:id="@+id/help"
+        android:title="Help"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_help0"
+        />
     <item android:id="@+id/import_account"
         android:title="Import Account" />
+    <item android:id="@+id/export_account"
+        android:title="Export Account" />
     <item android:id="@+id/welcome"
-        android:title="Show Welcome Message" />
+        android:title="Welcome Message" />
     <item android:id="@+id/about"
         android:title="About EtherPay" />
 </menu>

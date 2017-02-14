@@ -1,13 +1,16 @@
 package com.bringcommunications.etherpay;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
+import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -15,9 +18,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,12 +56,12 @@ import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 
 
-public class SendActivity extends AppCompatActivity implements HTTP_Query_Client {
+public class SendActivity extends AppCompatActivity implements Payment_Processor_Client, AdapterView.OnItemSelectedListener {
+  //HTTP_Query_Client
 
   private FrameLayout overlay_frame_layout;
   private SendActivity context;
   private static final float WEI_PER_ETH = (float)1000000000000000000.0;
-  private static final int DEFAULT_GAS_LIMIT = 35000;
   private SharedPreferences preferences;
   private Hex hex;
   //inputs
@@ -62,16 +70,21 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   private String to_addr = "";
   private String auto_pay = "";
   private boolean show_gas = false;
-  private float size;
-  private String data = "";
-  private float balance;
+  private boolean show_data = false;
+  private boolean send_is_done = false;
+  private float eth_size;
+  private float eth_balance;
   private float price;
   //we set these
-  private long gas_price;
-  private long gas_limit = DEFAULT_GAS_LIMIT;
+  private long gas_limit = Util.DEFAULT_GAS_LIMIT;
+  private String data = "";
   private long nonce;
   private String txid = "";
-  
+  private enum Denomination { ETH, FINNEY };
+  private Denomination denomination = Denomination.ETH;
+  private Toast toast = null;
+
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -83,39 +96,81 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
     private_key = preferences.getString("key", private_key);
     acct_addr = preferences.getString("acct_addr", acct_addr);
-    balance = preferences.getFloat("balance", balance);
+    long wei_balance = preferences.getLong("balance", 0);
+    eth_balance = (float)wei_balance / Util.WEI_PER_ETH;
     price = preferences.getFloat("price", price);
     show_gas = preferences.getBoolean("show_gas", show_gas);
+    show_data = preferences.getBoolean("show_data", show_data);
+    boolean denomination_eth = preferences.getBoolean("denomination_eth", true);
+    denomination = denomination_eth ? Denomination.ETH : Denomination.FINNEY;
     auto_pay = getIntent().getStringExtra("AUTO_PAY");
     to_addr = getIntent().getStringExtra("TO_ADDR");
     String size_str = getIntent().getStringExtra("SIZE");
-    size = Float.valueOf(size_str);
+    eth_size = Float.valueOf(size_str);
     data = getIntent().getStringExtra("DATA");
+    send_is_done = false;
     //
-    int layout = show_gas ? R.layout.activity_send_gas : R.layout.activity_send;
-    View activity_send_view = getLayoutInflater().inflate(layout, overlay_frame_layout, false);
+    View activity_send_view = getLayoutInflater().inflate(R.layout.activity_send, overlay_frame_layout, false);
     setContentView(activity_send_view);
+    //
+    Spinner dropdown = (Spinner)findViewById(R.id.denomination);
+    String[] items = new String[] {"Finney", "ETH"};
+    ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, items);
+    dropdown.setSelection((denomination == Denomination.ETH) ? 1 : 0);
+    dropdown.setOnItemSelectedListener(this);
+    dropdown.setAdapter(adapter);
+    //
     Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
-    toolbar.setTitle("EtherPay - Send Payment");
-    toolbar.setBackgroundResource(R.color.etherpay_blue);
+    String app_name = getResources().getString(R.string.app_name);    
+    toolbar.setTitle(app_name);
+    toolbar.setSubtitle("Send Payment");
+    toolbar.setBackgroundResource(R.color.color_toolbar);
     setSupportActionBar(toolbar);
     //
     TextView to_addr_view = (TextView) findViewById(R.id.to_addr);
     to_addr_view.setText(to_addr);
     //
     TextView size_view = (TextView) findViewById(R.id.size);
-    size_str = String.format("%1.03f", size);
+    size_str = (denomination == Denomination.ETH) ? String.format("%1.03f", eth_size) : String.format("%03d", (int)(eth_size * 1000 + 0.5));
     size_view.setText(size_str);
+    //
+    LinearLayout gas_layout = (LinearLayout) findViewById(R.id.gas_layout);
+    TextView gas_prompt_view = (TextView) findViewById(R.id.gas_prompt);
+    TextView gas_view = (TextView) findViewById(R.id.gas);
+    ImageButton gas_help_view = (ImageButton) findViewById(R.id.gas_help);
     if (show_gas) {
-      TextView gas_view = (TextView) findViewById(R.id.gas);
       String gas_str = String.format("%7d", gas_limit);
       gas_view.setText(gas_str);
+      gas_layout.setVisibility(View.VISIBLE);
+      gas_prompt_view.setVisibility(View.VISIBLE);
+      gas_help_view.setVisibility(View.VISIBLE);
+      gas_view.setVisibility(View.VISIBLE);
+    } else {
+      gas_layout.setVisibility(View.GONE);
+      gas_prompt_view.setVisibility(View.GONE);
+      gas_help_view.setVisibility(View.GONE);
+      gas_view.setVisibility(View.GONE);
     }
-    //
-    if (!data.isEmpty()) {
-      EditText data_view = (EditText) findViewById(R.id.data);
+
+    LinearLayout data_layout = (LinearLayout) findViewById(R.id.data_layout);
+    TextView data_prompt_view = (TextView) findViewById(R.id.data_prompt);
+    TextView data_view = (TextView) findViewById(R.id.data);
+    ImageButton data_help_view = (ImageButton) findViewById(R.id.data_help);
+    if (show_data) {
       data_view.setText(data);
+      data_layout.setVisibility(View.VISIBLE);
+      data_prompt_view.setVisibility(View.VISIBLE);
+      data_help_view.setVisibility(View.VISIBLE);
+      data_view.setVisibility(View.VISIBLE);
+    } else {
+      data = "";
+      data_layout.setVisibility(View.GONE);
+      data_prompt_view.setVisibility(View.GONE);
+      data_help_view.setVisibility(View.GONE);
+      data_view.setVisibility(View.GONE);
     }
+
+    //
     //sanity check
     if (to_addr.length() != 42) {
       this.finish();
@@ -127,13 +182,14 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
     MenuInflater inflater = getMenuInflater();
     inflater.inflate(R.menu.send_options, menu);
     menu.findItem(R.id.show_gas).setChecked(show_gas);
+    menu.findItem(R.id.show_data).setChecked(show_data);
     return(true);
   }
 
 
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case R.id.show_gas:
+      case R.id.show_gas: {
         boolean show_gas = item.isChecked() ? false : true;
         item.setChecked(show_gas);
         SharedPreferences.Editor preferences_editor = preferences.edit();
@@ -141,14 +197,47 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
         preferences_editor.apply();
         recreate();
         return true;
-      case R.id.payment_help:
-        show_pay_help_dialog();
+      }
+      case R.id.show_data: {
+        boolean show_data = item.isChecked() ? false : true;
+        item.setChecked(show_data);
+        SharedPreferences.Editor preferences_editor = preferences.edit();
+        preferences_editor.putBoolean("show_data", show_data);
+        preferences_editor.apply();
+        recreate();
+        return true;
+      }
+      case R.id.help:
+        do_help(R.string.send_help_title, R.string.send_help);
         return true;
       default:
         return super.onOptionsItemSelected(item);
     }
   }
 
+
+  //this onItemSelected is called when a new denominatino is selected from the denomination drop-down
+  @Override
+  public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+    EditText size_view = (EditText) findViewById(R.id.size);
+    String cur_size_str = size_view.getText().toString();
+    float cur_size = Float.valueOf(cur_size_str);
+    eth_size = (denomination == Denomination.ETH) ? cur_size : cur_size / 1000;
+    denomination = (position == 0) ? Denomination.FINNEY : Denomination.ETH;
+    if (denomination == Denomination.FINNEY) {
+      eth_size = (float)((int)(eth_size * 1000 + 0.5)) / 1000;
+    }
+    boolean denomination_eth = (denomination == Denomination.ETH) ? true : false;
+    SharedPreferences.Editor preferences_editor = preferences.edit();
+    preferences_editor.putBoolean("denomination_eth", denomination_eth);
+    preferences_editor.apply();
+    String size_str = (denomination == Denomination.ETH) ? String.format("%1.03f", eth_size) : String.format("%03d", (int)(eth_size * 1000 + 0.5));
+    size_view.setText(size_str);
+  }
+  public void onNothingSelected(AdapterView<?> parent) {
+  }
+
+  
   public void onResume() {
     super.onResume();  // Always call the superclass method first
     if (auto_pay.equals("true")) {
@@ -170,6 +259,7 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
   //displays the txid -- but also displays a message informing the user that the transaction was completed.
   //waits for the user to acknowledge the message -- AND THEN RETURNS TO THE PARENT ACTIVITY!
   private void dsp_txid_and_exit() {
+    /*
     TextView txid_view = (TextView) findViewById(R.id.txid);
     txid_view.setText(txid);
     if (auto_pay.equals("true")) {
@@ -177,7 +267,9 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
       NavUtils.navigateUpFromSameTask(context);
       this.finish();
-    } else {
+    } else
+    */
+    {
       AlertDialog.Builder builder = new AlertDialog.Builder(this);
       String title = txid.isEmpty() ? "Error" : "Transaction Sent";
       String msg = txid.isEmpty() ? "An error occurred while attempting this transaction -- press OK to continue" :
@@ -195,46 +287,28 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
               });
       AlertDialog alert = builder.create();
       alert.show();
-      long last_pay_sec = System.currentTimeMillis() / 1000;
-      SharedPreferences.Editor preferences_editor = preferences.edit();
-      preferences_editor.putLong("last_pay_sec", last_pay_sec);
-      preferences_editor.putBoolean("refresh_mode", true);
-      preferences_editor.putLong("last_nonce", nonce);
-      preferences_editor.apply();
     }
   }
 
-  private void show_pay_help_dialog() {
-    android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(context);
-    alertDialogBuilder.setTitle("About Ether Payments");
-    alertDialogBuilder.setMessage(getResources().getString(R.string.pay_help));
-    alertDialogBuilder.setCancelable(false);
-    alertDialogBuilder.setNeutralButton("OK",
-            new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog,int id) {
-                dialog.cancel();
-              }
-            });
-    android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
-    alertDialog.show();
+  public void do_size_help(View view) {
+    do_help(R.string.size_help_title, R.string.size_help);
   }
-
-
   public void do_gas_help(View view) {
-    String help_text = getResources().getString(R.string.pay_gas_help);
-    Util.show_err(getBaseContext(), help_text, 15);
+    do_help(R.string.gas_help_title, R.string.gas_help);
   }
-
   public void do_data_help(View view) {
-      String help_text = getResources().getString(R.string.pay_data_help);
-      Util.show_err(getBaseContext(), help_text, 7);
+    do_help(R.string.data_help_title, R.string.data_help);
   }
 
-    public void do_pay(View view) {
+  public void do_pay(View view) {
+      if (send_is_done)
+        return;
       //validate size... we check for sufficient balance later...
       EditText size_view = (EditText) findViewById(R.id.size);
-      size = Float.valueOf(size_view.getText().toString());
-      if (size == 0) {
+      String user_size_str = size_view.getText().toString();
+      float user_size = Float.valueOf(user_size_str);
+      eth_size = (denomination == Denomination.ETH) ? user_size : user_size / 1000;
+      if (eth_size == 0) {
           Toast.makeText(context, "Cannot send zero ETH", Toast.LENGTH_LONG).show();
           return;
       }
@@ -248,8 +322,19 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
           return;
         }
       }
-      if (gas_limit < DEFAULT_GAS_LIMIT) {
+      if (gas_limit < Util.DEFAULT_GAS_LIMIT) {
         Toast.makeText(context, "Gas limit is too low -- transaction might not succeed!", Toast.LENGTH_LONG).show();
+        return;
+      }
+      //ensure sufficient funds
+      long gas_price = preferences.getLong("gas_price", Util.DEFAULT_GAS_PRICE);
+      float max_gas_eth = (gas_limit * gas_price) / WEI_PER_ETH;
+      if (eth_size + max_gas_eth > eth_balance) {
+        String balance_str = String.format("%1.06f", eth_balance);
+        String size_str = String.format("%1.06f", eth_size);
+        String gas_str = String.format("%1.08f", max_gas_eth);
+        String msg = "Balance (" + balance_str + ") is not sufficient to cover " +  size_str + " ETH, plus " + gas_str + " GAS";
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
         return;
       }
       //validate to_addr
@@ -263,181 +348,51 @@ public class SendActivity extends AppCompatActivity implements HTTP_Query_Client
       }
       EditText data_view = (EditText) findViewById(R.id.data);
       data = data_view.getText().toString();
-      send_to_0();
-  }
-
-  public void handle_http_rsp(String callback, String rsp) {
-    if (callback.equals("gas")) {
-      set_gas(rsp);
-      float max_gas = (gas_limit * gas_price) / WEI_PER_ETH;
-      if (size + max_gas > balance) {
-        String balance_str = String.format("%1.06f", balance);
-        String size_str = String.format("%1.06f", size);
-        String gas_str = String.format("%1.08f", max_gas);
-        String msg = "Balance (" + balance_str + ") is not sufficient to cover " +  size_str + " ETH, plus " + gas_str + " GAS";
-        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-        return;
-      }
-      send_to_1();
-    } else if (callback.equals("nonce")) {
-      if (!set_nonce(rsp)) {
-        //error occurred. dsp_txid will show error message and exit
-        dsp_txid_and_exit();
-      }
-      send_to_2();
-    } else if (callback.equals("broadcast")) {
-      set_txid(rsp);
-      dsp_txid_and_exit();
-    }
-  }
-
-  private void set_gas(String gas_rsp) {
-    //typical response id:
-    //{
-    // "status": 1,
-    // "data": [
-    //  {
-    //   "price": 23000000000
-    //  }
-    // ]
-    //}
-    gas_price = 0;
-    if (gas_rsp.contains("price")) {
-      int field_idx = gas_rsp.indexOf("price") + "price".length();
-      int beg_idx = gas_rsp.indexOf(':', field_idx) + 1;
-      int end_idx = gas_rsp.indexOf('}', beg_idx);
-      String gas_price_str = gas_rsp.substring(beg_idx, end_idx).trim();
-      if (!gas_price_str.equals("null"))
-      	gas_price = Long.valueOf(gas_price_str);
-      float gas_price_eth = gas_price / WEI_PER_ETH;
-      //Toast.makeText(context, "gas_price = " + String.format("%11.09f", gas_price_eth) + " ETH", Toast.LENGTH_LONG).show();
-    } else {
-      Util.show_err(getBaseContext(), "error retreiving gas price!", 3);
-      Util.show_err(getBaseContext(), gas_rsp, 10);
-    }
-  }
-
-  private boolean set_nonce(String nonce_rsp) {
-    //typical response id:
-    //{
-    // "status": 1,
-    // "data": [
-    //  {
-    //   "accountNonce": "16"
-    //  }
-    // ]
-    //}
-    boolean got_nonce = false;
-    if (nonce_rsp.contains("accountNonce")) {
-      nonce_rsp = nonce_rsp.replaceAll("\"", "");
-      int field_idx = nonce_rsp.indexOf("accountNonce") + "accountNonce".length();
-      int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
-      int end_idx = nonce_rsp.indexOf('}', beg_idx);
-      String nonce_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-      if (!nonce_str.equals("null")) {
-        nonce = Long.valueOf(nonce_str);
-        got_nonce = true;
-      }
-    } else if (nonce_rsp.contains("status")) {
-      int field_idx = nonce_rsp.indexOf("status") + "status".length();
-      int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
-      int end_idx = nonce_rsp.indexOf(',', beg_idx);
-      String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-      if (status_str.equals("1")) {
-        //no error, but no nonce data.... the account has necer been used
-        nonce = -1;
-        got_nonce = true;
-      }
-    }
-    if (!got_nonce) {
-      nonce = -1;
-      Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
-      Util.show_err(getBaseContext(), nonce_rsp, 10);
-    }
-    if (BuildConfig.DEBUG)
-      System.out.println("nonce rsp: " + nonce_rsp);
-    return(got_nonce);
-  }
-
-  private void set_txid(String broadcast_rsp) {  
-    //typical response id:
-    //{
-    //  "jsonrpc": "2.0",
-    //  "result": "0xd22456131597cff2297d1034f9e6f790e9678d85c041591949ab5a8de5f73f04",
-    //  "id": 1
-    //}
-    txid = "";
-    if (broadcast_rsp.contains("result")) {
-      broadcast_rsp = broadcast_rsp.replaceAll("\"", "");
-      int field_idx = broadcast_rsp.indexOf("result") + "result".length();
-      int beg_idx = broadcast_rsp.indexOf(':', field_idx) + 1;
-      int end_idx = broadcast_rsp.indexOf(',', beg_idx);
-      txid = broadcast_rsp.substring(beg_idx, end_idx).trim();
-      if (BuildConfig.DEBUG)
-        System.out.println("txid: " + txid);
-    } else {
-      Util.show_err(getBaseContext(), "error broadcasting transaction!", 3);
-      Util.show_err(getBaseContext(), broadcast_rsp, 10);
-    }
-    //Toast.makeText(context, "txid = " + txid, Toast.LENGTH_LONG).show();
-  }
-
-    
-  //step 0 in send -- get gas price
-  private void send_to_0() {
-    //get gas price
-    String gas_URL = "https://etherchain.org/api/gasPrice";
-    String parms[] = new String[2];
-    parms[0] = gas_URL;
-    parms[1] = "gas";
-    new HTTP_Query_Task(this, context).execute(parms);
-  }
-
-  //step 1 in send -- get nonce
-  private void send_to_1() {
-    //get account nonce
-    String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
-    String parms[] = new String[2];
-    parms[0] = nonce_URL;
-    parms[1] = "nonce";
-    new HTTP_Query_Task(this, context).execute(parms);
-  }
-
-  //step 2 in send -- just call create_and_broadcast_transaction passing the user's transaction data
-  private void send_to_2() {
-    ++nonce;
-    create_and_broadcast_transaction(gas_price, nonce, to_addr, data, size, "broadcast");
+      long size_wei = (long)(eth_size * WEI_PER_ETH);
+      Payment_Processor.send(this, context, "", to_addr, size_wei, gas_limit, data.getBytes(), false);
+      send_is_done = true;
+      Button pay_view = (Button) findViewById(R.id.pay_button);
+      pay_view.setClickable(false);
   }
 
 
-  private void create_and_broadcast_transaction(long gas_price, long nonce, String to_addr, String data, float size, String callback) {
-    //this is sufficient for simple transactions, even if they include a little data. it is ~0.01 cents
-    long wei = (long)(size * WEI_PER_ETH);
-    String to_addr_no_0x = to_addr.startsWith("0x") ? to_addr.substring(2) : to_addr;
-    //create signed transaction
-    byte[] bytes_key = null;
-    byte[] bytes_to_addr = null;
-    try {
-      bytes_key = hex.decode(private_key.getBytes());
-      bytes_to_addr = hex.decode(to_addr_no_0x.getBytes());
-    } catch (DecoderException e) {
-      Util.show_err(getBaseContext(), e.toString(), 15);
-    }
-    byte[] bytes_gas_price = longToBytesNoLeadZeroes(gas_price);
-    byte[] bytes_gas_limit = longToBytesNoLeadZeroes(gas_limit);
-    byte[] bytes_value = longToBytesNoLeadZeroes(wei);
-    byte[] bytes_nonce = longToBytesNoLeadZeroes(nonce);
-    byte[] bytes_data = data.isEmpty() ? null : data.getBytes();
-    Transaction tx = new Transaction(bytes_nonce, bytes_gas_price, bytes_gas_limit, bytes_to_addr, bytes_value, bytes_data);
-    //
-    tx.sign(bytes_key);
-    byte[] rlp_encoded_tx = tx.getEncoded();
-    String hex_tx = new String(hex.encodeHex(rlp_encoded_tx));
-    String broadcast_URL = "https://api.etherscan.io/api?module=proxy&action=eth_sendRawTransaction&hex=" + hex_tx;
-    String parms[] = new String[2];
-    parms[0] = broadcast_URL;
-    parms[1] = callback;
-    new HTTP_Query_Task(this, context).execute(parms);
+  private void do_help(int title, int msg) {
+    android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(context);
+    alertDialogBuilder.setTitle(getResources().getString(title));
+    alertDialogBuilder.setMessage(getResources().getString(msg));
+    alertDialogBuilder.setCancelable(false);
+    alertDialogBuilder.setNeutralButton("OK",
+            new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog,int id) {
+                dialog.cancel();
+              }
+            });
+    android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+    alertDialog.show();
+  }
+
+
+  //is is the callback from Payment_Processor
+  public boolean payment_result(boolean ok, String txid, long size_wei, String client_data, String error) {
+    this.txid = txid;
+    dsp_txid_and_exit();
+    return true;
+  }
+  public void interim_payment_result(long size_wei, String client_data, String msg) {
+    /*
+    TODO:
+    Message delay_message = socket_emitter_handler.obtainMessage(SOCKET_EVENT_DELAY, 1, 0, null);
+    delay_message.sendToTarget();
+    if (toast != null)
+      toast.cancel();
+    (toast = Toast.makeText(context, "processing", Toast.LENGTH_LONG)).show();
+     */
+  }
+  public void balance_result(boolean ok, long balance, String error) {
+    System.out.println("SendActivity:balance_result: Hey! we should never be here!");
+  }
+  public void interim_balance_result(String msg) {
+    System.out.println("SendActivity:interim_result: Hey! we should never be here!");
   }
 
 }

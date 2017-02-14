@@ -1,167 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- note: android:gravity="center_horizontal" in the layout tag will center the layout's children
+     horizontally inside the LinearLayout.
+
+     question: do we want the padding??
+     -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_send"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="fill_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="@drawable/background_graphic"
     tools:context="com.bringcommunications.etherpay.SendActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/color_toolbar"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         android:layout_alignParentTop="true"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="33dp"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:text="to: "
-        android:id="@+id/to_addr_prompt"
-        android:layout_below="@id/toolbar"/>
 
     <TextView
+        android:id="@+id/to_addr_prompt"
+        android:text="Send To"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="center"
+        android:gravity="center_vertical"		
+        android:layout_marginTop="22dp"
+        android:minHeight="@dimen/header_min_height"	
+        android:textSize="@dimen/header_text_size"	
+        android:textStyle="bold"
+        android:background="@color/color_headerbar"
+        />
+
+    <!-- most of the other items on this page have a help imagebutton. that causes them to appear
+        vertically centered in their respective layouts. so for the to-addr we need to veritically
+        center to make it match the other itmes
+        -->
+    <TextView
+        android:id="@+id/to_addr"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:layout_marginLeft="22dp"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+	android:textSize="@dimen/balance_text_size_medium"	
         android:singleLine="true"
         android:text="-- recipeient addr --"
-        android:id="@+id/to_addr"
-        android:layout_toRightOf="@+id/size_prompt"
-        android:layout_below="@id/toolbar"
-        android:layout_alignTop="@id/to_addr_prompt"
         />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:text="amount: "
+        android:text="Amount"
         android:id="@+id/size_prompt"
-        android:layout_below="@id/to_addr_prompt"
-        android:layout_alignBaseline="@+id/size"
-        />
-
-    <EditText
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:layout_marginLeft="22dp"
-        android:singleLine="true"
-        android:text="0.000000"
-        android:layout_gravity="left"
-        android:maxLength="9"
-        android:minEms="5"
-        android:inputType="numberDecimal"
-        android:id="@+id/size"
-        android:layout_toRightOf="@id/size_prompt"
-        android:layout_below="@id/to_addr"
+        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="center"
+        android:gravity="center_vertical"		
         android:layout_marginTop="22dp"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:minHeight="@dimen/header_min_height"	
+        android:textSize="@dimen/header_text_size"	
         android:textStyle="bold"
-        android:layout_marginLeft="11dp"
-        android:layout_marginRight="22dp"
-        android:text="ETH"
-        android:id="@+id/ETH"
-        android:layout_toRightOf="@id/size"
-        android:layout_below="@id/to_addr_prompt"
-        android:layout_alignBaseline="@+id/size"
+        android:background="@color/color_headerbar"
         />
 
-
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- linear layout for amount and denomination -->
+    <!-- note: android:gravity in the layout tag will affect the layout's children
+         -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:gravity="bottom"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:text="data: "
+        android:layout_marginTop="22dp"
+         >
+
+        <EditText
+            android:id="@+id/size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="11dp"
+	    android:textSize="@dimen/balance_text_size_big"	    
+            android:singleLine="true"
+            android:text="0.000000"
+            android:maxLength="9"
+            android:minEms="5"
+            android:inputType="numberDecimal"
+            android:layout_weight="0"
+        />
+
+        <Spinner
+            android:id="@+id/denomination"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_help0"
+            android:background="?attr/selectableItemBackground"
+            android:id="@+id/size_help"
+            android:onClick="do_size_help"
+            android:layout_weight="0"
+            android:layout_gravity="top"
+            />
+
+    </LinearLayout>
+
+
+    <TextView
         android:id="@+id/data_prompt"
-        android:layout_below="@id/size"
-        android:layout_alignBottom="@+id/data_help"
-        />
-
-    <ImageButton
-        android:layout_width="wrap_content"
+        android:text="Data"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_help0"
-        android:background="?attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_vertical"		
         android:layout_marginTop="22dp"
-        android:layout_marginLeft="2dp"
-        android:layout_marginRight="8dp"
-        android:id="@+id/data_help"
-        android:layout_toRightOf="@id/data_prompt"
-        android:layout_below="@id/size"
-        android:onClick="do_data_help"
+        android:textAlignment="center"
+        android:minHeight="@dimen/header_min_height"	
+        android:textSize="@dimen/header_text_size"	
+        android:textStyle="bold"
+        android:background="@color/color_headerbar"
         />
 
-    <EditText
-        android:layout_width="wrap_content"
+
+    <!-- linear layout for data and data-help -->
+    <!-- note: android:gravity in the layout tag will affect the layout's children
+         -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/data_layout"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:gravity="bottom"
-        android:textSize="18sp"
-        android:layout_marginLeft="11dp"
-        android:singleLine="true"
-        android:text=""
-        android:inputType="text"
-        android:maxLength="20"
-        android:minEms="15"
-        android:maxEms="15"
-        android:id="@+id/data"
-        android:layout_toRightOf="@id/data_help"
-        android:layout_below="@id/size"
-        android:layout_alignBottom="@+id/data_prompt"
+        android:layout_marginTop="22dp"
+         >
+
+        <EditText
+            android:id="@+id/data"
+            android:text=""
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+	    android:textSize="@dimen/balance_text_size_big"
+            android:layout_marginLeft="11dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:maxLength="20"
+            android:minEms="15"
+            android:maxEms="15"
+            android:layout_weight="0"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_help0"
+            android:background="?attr/selectableItemBackground"
+            android:id="@+id/data_help"
+            android:onClick="do_data_help"
+            android:layout_weight="0"
+            android:layout_gravity="top"
+            />
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/gas_prompt"
+        android:text="Gas Limit"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="center"
+        android:gravity="center_vertical"		
+        android:layout_marginTop="22dp"
+        android:minHeight="@dimen/header_min_height"	
+        android:textSize="@dimen/header_text_size"	
+        android:textStyle="bold"
+        android:background="@color/color_headerbar"
         />
+
+    <!-- linear layout for data and data-help -->
+    <!-- note: android:gravity in the layout tag will affect the layout's children
+         -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/gas_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom"
+        android:layout_marginTop="22dp"
+        >
+
+        <EditText
+            android:id="@+id/gas"
+            android:inputType="number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="11dp"
+            android:layout_gravity="left"
+	    android:textSize="@dimen/balance_text_size_big"
+            android:singleLine="true"
+            android:text="0000000"
+            android:maxLength="9"
+            android:minEms="5"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/gas_help"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_help0"
+            android:background="?attr/selectableItemBackground"
+            android:onClick="do_gas_help"
+            android:layout_gravity="top"
+            />
+    </LinearLayout>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
     <Button
-        android:text="Pay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/data"
-        android:layout_marginTop="33dp"
         android:id="@+id/pay_button"
+        android:text="Pay"
         android:onClick="do_pay"
-        />
-
-    <TextView
-        android:layout_alignTop="@+id/txid"
-        android:layout_alignParentBottom="true"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:text="txid: "
-        android:id="@+id/txid_prompt"
-        android:layout_below="@id/pay_button"
-        />
-
-    <TextView
-        android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:layout_marginTop="66dp"
-        android:layout_marginLeft="22dp"
-        android:text="-- txid --"
-        android:id="@+id/txid"
-        android:layout_toRightOf="@id/txid_prompt"
-        android:layout_below="@id/pay_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:minHeight="@dimen/button_min_height"
+        android:textAlignment="center"
+        android:background="@drawable/button_background"
         />
 
-</RelativeLayout>
+</LinearLayout>

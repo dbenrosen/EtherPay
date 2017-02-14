@@ -3,4 +3,28 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+    <!-- if enabled, send tx before validating nonce -->
+    <bool name="enable_rapid_tx">true</bool>
+
+    <!-- how many secs to display the splash graphic at startup -->
+    <integer name="min_splash_graphic_duration">8</integer>
+
+    <!-- when we display balance, we might display in different denominations (finney,
+	 eth, and usd) at different sizes -->
+    <dimen name="balance_text_size_big">18sp</dimen>    
+    <dimen name="balance_text_size_medium">14sp</dimen>    
+    <dimen name="balance_text_size_small">14sp</dimen>
+    
+    <!-- this is margin above the header bar that introduces a batch of buttons.
+        for example, "history" on the sendactivity. the margin is greater for large
+        screens. -->
+    <dimen name="header_margin_top">12dp</dimen>
+    <dimen name="header_min_height">35dp</dimen>
+    <dimen name="header_text_size">16sp</dimen>
+    
+    <dimen name="button_min_height">35dp</dimen>
+    <dimen name="button_text_size_2line">14sp</dimen>
+    <dimen name="button_text_size_1line">16sp</dimen>
+        
 </resources>

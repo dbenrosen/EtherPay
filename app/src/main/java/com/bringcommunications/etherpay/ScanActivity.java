@@ -42,6 +42,7 @@ import net.sourceforge.zbar.Image;
 import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
 import net.sourceforge.zbar.Config;
+import com.bringcommunications.etherpay.R;
 
 public class ScanActivity
         //extends Activity
@@ -80,7 +81,7 @@ public class ScanActivity
         //The internal implementation of the support library just checks if the Toolbar has a title (not null) at the moment the SupportActionBar is
         //set up. If there is, then this title will be used instead of the window title. You can then set a dummy title while you load the real title.
         toolbar.setTitle("");
-        toolbar.setBackgroundResource(R.color.etherpay_blue);
+        toolbar.setBackgroundResource(R.color.color_toolbar);
         setSupportActionBar(toolbar);
         //
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -92,7 +93,11 @@ public class ScanActivity
         scanner.setConfig(0, Config.X_DENSITY, 3);
         scanner.setConfig(0, Config.Y_DENSITY, 3);
         //
-        toolbar.setTitle(target_activity.equals("SendActivity") ? "EtherPay - Send Payment" : "EtherPay - Import Account");
+        int subtitle_R = target_activity.equals("SendActivity") ? R.string.scan_subtitle_send : R.string.scan_subtitle_import;
+        String subtitle = getResources().getString(subtitle_R);
+        String app_name = getResources().getString(R.string.app_name);
+        toolbar.setTitle(app_name);
+        toolbar.setSubtitle(subtitle);
         instructions_view = (TextView)findViewById(R.id.instructions);
         instructions_view.setText(scan_prompt);
         barcodeScanned = false;
@@ -111,7 +116,7 @@ public class ScanActivity
 
     public void onPause() {
         super.onPause();
-        System.out.println("in onPause");
+        System.out.println("ScanActivity: in onPause");
         releaseCamera();
     }
 
@@ -132,7 +137,11 @@ public class ScanActivity
         mCamera.setPreviewCallback(this);
         mCamera.startPreview();
         previewing = true;
-        mCamera.autoFocus(autoFocusCB);
+        try {
+            mCamera.autoFocus(autoFocusCB);
+        } catch (Exception e) {
+            System.out.println("autofocus failed: " + e.toString());
+        }
     }
 
     @Override
@@ -141,8 +150,10 @@ public class ScanActivity
             case REQUEST_CODE_ASK_PERMISSIONS:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     do_scan_guts();
-                else
-                    Toast.makeText(this, "We cannot scan access the camera", Toast.LENGTH_SHORT).show();
+                else {
+                    String msg = getResources().getString(R.string.cant_scan_cuz_no_access_msg);
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                }
                 break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -194,50 +205,51 @@ public class ScanActivity
             return;
         Camera.Parameters parameters = camera.getParameters();
         Size size = parameters.getPreviewSize();
-
         Image barcode = new Image(size.width, size.height, "Y800");
         barcode.setData(data);
 
         int result = scanner.scanImage(barcode);
-        if (result != 0) {
-            previewing = false;
-            mCamera.setPreviewCallback(null);
-            mCamera.stopPreview();
-            String scanned_data = "no data";
-            SymbolSet syms = scanner.getResults();
-            for (Symbol sym : syms) {
-                //scanText.setText("barcode result " + sym.getData());
-                scanned_data = sym.getData();
-                barcodeScanned = true;
-            }
-            switch (target_activity){
+            if (result != 0) {
+                previewing = false;
+                mCamera.setPreviewCallback(null);
+                mCamera.stopPreview();
+                String scanned_data = "no data";
+                SymbolSet syms = scanner.getResults();
+                for (Symbol sym : syms) {
+                    //scanText.setText("barcode result " + sym.getData());
+                    scanned_data = sym.getData();
+                    barcodeScanned = true;
+                }
+                switch (target_activity){
                 case "SendActivity": {
                     Intent intent = new Intent(this, SendActivity.class);
-		    //many QR codes simple contain the address, (eg 0x....); but i've seen this format also:
-		    //ethereum:<address>[?value=<value>][?gas=<suggestedGas>]
-		    String to_addr = scanned_data;
+		            //many QR codes simple contain the address, (eg 0x....); but i've seen this format also:
+    		        //ethereum:<address>[?value=<value>][?gas=<suggestedGas>]
+	    	        String to_addr = scanned_data;
                     if (scanned_data.contains(":0x")) {
                         int addr_idx = scanned_data.indexOf(':') + 1;
-			int end_idx = scanned_data.indexOf('?', addr_idx);
-			to_addr = (end_idx < 0) ? scanned_data.substring(addr_idx) : scanned_data.substring(addr_idx, end_idx);
+			            int end_idx = scanned_data.indexOf('?', addr_idx);
+			            to_addr = (end_idx < 0) ? scanned_data.substring(addr_idx) : scanned_data.substring(addr_idx, end_idx);
                     }
-		    String size_str = "0";
-		    if (scanned_data.contains("value=")) {
-		      int size_idx = scanned_data.indexOf("value=") + "value=".length() + 1;
-		      int end_idx = scanned_data.indexOf('?', size_idx);
-		      size_str = (end_idx < 0) ? scanned_data.substring(size_idx) : scanned_data.substring(size_idx, end_idx);
-		    }
+		            String size_str = "0";
+    		        if (scanned_data.contains("value=")) {
+		                int size_idx = scanned_data.indexOf("value=") + "value=".length() + 1;
+		                int end_idx = scanned_data.indexOf('?', size_idx);
+		                size_str = (end_idx < 0) ? scanned_data.substring(size_idx) : scanned_data.substring(size_idx, end_idx);
+		            }
                     intent.putExtra("TO_ADDR", to_addr);
                     intent.putExtra("SIZE", size_str);
                     intent.putExtra("DATA", "");
                     intent.putExtra("AUTO_PAY", "");
                     //finish scanactivity so back key doesn't bring us back here
+                    System.out.println("ScanACtivity::onPreviewFrame -- starting SendActivity");
                     startActivity(intent);
                     this.finish();
                     break;
                 }
                 case "MainActivity": {
-                    SharedPreferences preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
+		            String app_uri = getResources().getString(R.string.app_uri);
+                    SharedPreferences preferences = getSharedPreferences(app_uri, MODE_PRIVATE);
                     SharedPreferences.Editor preferences_editor = preferences.edit();
                     preferences_editor.putString("key", scanned_data);
                     preferences_editor.commit();
@@ -246,7 +258,7 @@ public class ScanActivity
                     break;
                 }
                 default: {
-                    Toast.makeText(this, "TARGET_ACTIVITY not set in ScanActivity", Toast.LENGTH_SHORT).show();
+                    System.out.println("TARGET_ACTIVITY not set in ScanActivity");
                     break;
                 }
             }

@@ -10,7 +10,7 @@
       android:id="@+id/toolbar"
       android:layout_width="match_parent"
       android:layout_height="?attr/actionBarSize"
-      android:background="?attr/colorPrimary"
+      android:background="@color/color_toolbar"
       android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
       android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
       android:layout_alignParentTop="true"/>
@@ -18,6 +18,7 @@
   <TextView
       android:id="@+id/instructions"
       android:text=""
+      android:textSize="16sp"
       android:layout_height="wrap_content"
       android:layout_width="match_parent"
       android:layout_marginLeft="22dp"

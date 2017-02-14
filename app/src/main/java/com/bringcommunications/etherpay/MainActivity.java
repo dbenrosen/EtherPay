@@ -3,17 +3,10 @@
 /*
   overview of vars stored in preferences:
 
-  balance          => most recent balance of current acct
-  price            => most recent price of Ether in USD
-  last_refresh_sec => timestamp for last time we attempted to update nonce, price, balance
-  last_nonce_sec   => timestamp for last time we updated balance
-  last_price_sec   => timestamp for last time we updated price
-  last_balance_sec => timestamp for last time we updated balance
-  last_pay_sec     => timestamp for last time we completed a payment
   private_key      => current account's private key
   acct_addr        => current account address
-  last_nonce       => nonce used in last payment
   refresh_mode     => mode is set after a payment completes, until we refresh balance
+
 */
 
 
@@ -21,9 +14,11 @@
   import android.content.Intent;
   import android.content.SharedPreferences;
   import android.graphics.Color;
-  import android.os.AsyncTask;
   import android.os.Bundle;
   import android.os.CountDownTimer;
+  import android.os.Handler;
+  import android.os.Looper;
+  import android.os.Message;
   import android.support.v7.app.AlertDialog;
   import android.support.v7.app.AppCompatActivity;
   import android.support.v7.widget.Toolbar;
@@ -33,51 +28,35 @@
   import android.view.View;
   import android.view.animation.AlphaAnimation;
   import android.view.animation.Animation;
+  import android.view.animation.AnimationUtils;
   import android.widget.FrameLayout;
   import android.widget.ImageButton;
+  import android.widget.ImageView;
   import android.widget.TextView;
   import android.widget.Toast;
 
   import org.ethereum.crypto.ECKey;
   import org.spongycastle.util.encoders.Hex;
 
-  import java.io.BufferedInputStream;
-  import java.io.BufferedReader;
-  import java.io.IOException;
-  import java.io.InputStream;
-  import java.io.InputStreamReader;
-  import java.io.UnsupportedEncodingException;
   import java.math.BigInteger;
-  import java.net.HttpURLConnection;
-  import java.net.MalformedURLException;
-  import java.net.URL;
-  import java.util.Random;
-
-  import static android.support.v7.appcompat.R.styleable.AlertDialog;
 
 
-  public class MainActivity extends AppCompatActivity implements HTTP_Query_Client {
-
-    private static final float WEI_PER_ETH = (float)1000000000000000000.0;
+  public class MainActivity extends AppCompatActivity implements Payment_Processor_Client {
 
     private String acct_addr = "";
     private String private_key = "";
-    private float balance = 0;
-    private float price = 0;
-    private long last_refresh_sec = 0;
-    private long last_nonce_sec = 0;
-    private long last_price_sec = 0;
-    private long last_balance_sec = 0;
-    private long last_pay_sec = 0;
-    private long last_nonce = 0;
-    //first payment nonce is 0; so if you've never made a payment then we call that -1; lt -1 means we'be never even tried to update
-    private long nonce = -2;
     private boolean refresh_mode = false;
+    private boolean do_pay = false;
     private SharedPreferences preferences;
     private FrameLayout overlay_frame_layout;
-    private View activity_main_view;
     private MainActivity context;
     private Toast toast = null;
+    private Handler message_handler = null;
+
+    //these defines are for our handle_message fcn, which displays dialogs on behalf of other threads (payment_processor)
+    private static final int HANDLE_BALANCE_CALLBACK = 1;
+    private static final int HANDLE_INTERIM_CALLBACK = 2;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,10 +66,62 @@
       View activity_main_view = getLayoutInflater().inflate(R.layout.activity_main, overlay_frame_layout, false);
       setContentView(activity_main_view);
       Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
-      toolbar.setBackgroundResource(R.color.etherpay_blue);
+      String app_name = getResources().getString(R.string.app_name);
+      String subtitle = getResources().getString(R.string.main_subtitle);
+      toolbar.setTitle(app_name);
+      if (!subtitle.isEmpty())
+	toolbar.setSubtitle(subtitle);
+      toolbar.setBackgroundResource(R.color.color_toolbar);
       setSupportActionBar(toolbar);
       context = this;
-      preferences = getSharedPreferences("etherpay.bringcommunications.com", MODE_PRIVATE);
+      String app_uri = getResources().getString(R.string.app_uri);
+      preferences = getSharedPreferences(app_uri, MODE_PRIVATE);
+      message_handler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message message) {
+          switch (message.what) {
+            case HANDLE_BALANCE_CALLBACK: {
+              boolean ok = (message.arg1 != 0);
+              if (ok) {
+                dsp_balance();
+                ImageButton refresh_button = (ImageButton) findViewById(R.id.refresh_button);
+                refresh_button.clearAnimation();
+                TextView finney_balance_view = (TextView) findViewById(R.id.eth_balance);
+                finney_balance_view.clearAnimation();
+                refresh_mode = false;
+                if (toast != null)
+                  toast.cancel();
+                Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT).show();
+              } else {
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+                alertDialogBuilder.setTitle("Uh Oh: Internet Connectivity Problem");
+                String msg = "Your Internet connection failed, and we were unable to retrieve your actual balance." +
+                        "\n\nPlease check your Internet connection";
+                alertDialogBuilder.setMessage(msg);
+                alertDialogBuilder.setCancelable(false);
+                alertDialogBuilder.setNeutralButton("OK",
+                        new DialogInterface.OnClickListener() {
+                          public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                            finish();
+                          }
+                        });
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+              }
+              break;
+            }
+            //
+            case HANDLE_INTERIM_CALLBACK: {
+              String msg = (String) message.obj;
+              if (toast != null)
+                toast.cancel();
+              (toast = Toast.makeText(context, msg, Toast.LENGTH_LONG)).show();
+              break;
+            }
+          }
+        }
+      };
     }
 
     //returns false => no options menu
@@ -106,10 +137,23 @@
             if (ask_delete_old_key())
               delete_old_key_import_new();
             return true;
+        case R.id.export_account:
+          if (acct_addr.isEmpty()) {
+            String msg = getResources().getString(R.string.no_acct);
+            Util.show_err(getBaseContext(), msg, 5);
+            return true;
+          }
+          Intent intent = new Intent(this, ReceiveActivity.class);
+          intent.putExtra("SHOW_PRIVATE", true);
+          startActivity(intent);
+          return true;
         case R.id.welcome:
           show_welcome_dialog();
           return true;
-        case R.id.about:
+        case R.id.help:
+	      do_help(null);
+	  return true;
+      case R.id.about:
           show_about_dialog();
           return true;
         default:
@@ -120,31 +164,15 @@
     public void onPause() {
         super.onPause();  // Always call the superclass method first
         SharedPreferences.Editor preferences_editor = preferences.edit();
-        preferences_editor.putFloat("balance", balance);
-        preferences_editor.putFloat("price", price);
-        preferences_editor.putLong("refresh-sec", last_refresh_sec);
-        preferences_editor.putLong("last_pay_sec", last_pay_sec);
         preferences_editor.putBoolean("refresh_mode", false);
         preferences_editor.commit();
     }
 
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        balance = preferences.getFloat("balance", balance);
-        price = preferences.getFloat("price", price);
-        last_refresh_sec = preferences.getLong("refresh-sec", last_refresh_sec);
-        last_pay_sec = preferences.getLong("last_pay_sec", last_pay_sec);
         private_key = preferences.getString("key", private_key);
         acct_addr = preferences.getString("acct_addr", "");
-        last_nonce = preferences.getLong("last_nonce", last_nonce);
         refresh_mode = preferences.getBoolean("refresh_mode", false);
-        //for test only
-        if (BuildConfig.DEBUG) {
-          if (false && private_key.isEmpty()) {
-            private_key = ""; //debug private key goes here
-            Toast.makeText(getBaseContext(), "test mode key " + private_key, Toast.LENGTH_SHORT).show();
-          }
-        }
         if (acct_addr.isEmpty() && private_key.isEmpty()) {
           show_welcome_dialog();
         } else if (acct_addr.isEmpty() && !private_key.isEmpty()) {
@@ -155,31 +183,66 @@
             BigInteger pk = new BigInteger(private_key, 16);
             ECKey ec_key = ECKey.fromPrivate(pk);
             acct_addr = "0x" + Hex.toHexString(ec_key.getAddress());
-            if (acct_addr.isEmpty() || acct_addr.length() != 42) {
+            if (acct_addr.length() != 42) {
               Util.show_err(getBaseContext(), "invalid account address from key; length is " + acct_addr.length(), 5);
               private_key = "";
               acct_addr = "";
             } else {
               refresh_mode = true;
-              last_nonce = -1;
-              balance = 0;
               SharedPreferences.Editor preferences_editor = preferences.edit();
               preferences_editor.putString("acct_addr", acct_addr);
-              preferences_editor.putLong("last_nonce", last_nonce);
+              preferences_editor.putLong("balance", 0);
+              preferences_editor.putLong("verified_balance", 0);
+              preferences_editor.putLong("balance_refresh_sec", 0);
+              preferences_editor.putLong("last_tx_nonce", -1);
+              preferences_editor.putLong("verified_nonce", -2);
+              preferences_editor.putLong("nonce_refresh_sec", 0);
+              preferences_editor.putLong("verified_balance_changed_sec", 0);
+              preferences_editor.putBoolean("acct_has_no_txs", false);
               preferences_editor.commit();
               Toast.makeText(getBaseContext(), "new acct sucessfully imported: " + acct_addr, Toast.LENGTH_LONG).show();
             }
           }
         }
-        if (acct_addr.isEmpty()) {
-          last_nonce = -1;
-          balance = 0;
-        }
+        long balance = preferences.getLong("balance", 0);
+        long verified_balance = preferences.getLong("verified_balance", 0);
+        if (balance != verified_balance)
+          refresh_mode = true;
         dsp_balance();
         dsp_acct_addr();
-        if (refresh_mode)
-          schedule_refresh();
+        if (refresh_mode) {
+          do_refresh(null);
+        } else {
+          //ensure that we are not displaying these animations from any previous refresh that was incomplete
+          ImageButton refresh_button = (ImageButton) findViewById(R.id.refresh_button);
+          refresh_button.clearAnimation();
+          TextView eth_balance_view = (TextView) findViewById(R.id.eth_balance);
+          eth_balance_view.clearAnimation();
+        }
       }
+
+    public void onStop() {
+      if (toast != null)
+        toast.cancel();
+      //if we were waiting to update balance, no need to keep that request queued anymore
+      Payment_Processor.cancel_messages(this);
+      super.onStop();
+    }
+
+    public void do_help(View view) {
+      android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(context);
+      alertDialogBuilder.setTitle(getResources().getString(R.string.wallet_help_title));
+      alertDialogBuilder.setMessage(getResources().getString(R.string.wallet_help));
+      alertDialogBuilder.setCancelable(false);
+      alertDialogBuilder.setNeutralButton("OK",
+              new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog,int id) {
+                  dialog.cancel();
+                }
+              });
+      android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+      alertDialog.show();
+    }
 
     public void do_receive(View view) {
       if (acct_addr.isEmpty()) {
@@ -188,6 +251,7 @@
         return;
       }
       Intent intent = new Intent(this, ReceiveActivity.class);
+      intent.putExtra("SHOW_PRIVATE", false);
       startActivity(intent);
     }
 
@@ -217,17 +281,6 @@
     }
 
 
-    public void schedule_refresh() {
-      new CountDownTimer(10000, 5000) {
-        public void onTick(long millisUntilFinished) {
-          //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-        }
-        public void onFinish() {
-          do_refresh(null);
-        }
-      }.start();
-    }
-
     public void do_refresh(View view) {
       if (acct_addr.isEmpty()) {
         String msg = getResources().getString(R.string.no_acct);
@@ -235,49 +288,9 @@
         return;
       }
       ImageButton refresh_button = (ImageButton) findViewById(R.id.refresh_button);
-      refresh_button.setBackgroundColor(Color.GRAY);
-      long now_sec = System.currentTimeMillis() / 1000;
-      if (view != null || nonce < last_nonce)  {
-        if (now_sec - last_refresh_sec < 5) {
-          Toast.makeText(context, "continuing refresh.... (" + nonce + "/" + last_nonce + ")", Toast.LENGTH_LONG).show();
-          schedule_refresh();
-        } else {
-          last_refresh_sec = now_sec;
-          (toast = Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT)).show();
-          String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
-          String parms[] = new String[2];
-          parms[0] = nonce_URL;
-          parms[1] = "nonce-refresh";
-          new HTTP_Query_Task(this, context).execute(parms);
-        }
-      } else if (last_balance_sec < last_nonce_sec) {
-        last_refresh_sec = now_sec;
-    	if (toast != null)
-	      toast.cancel();
-        (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
-        String balance_parms[] = new String[2];
-        balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
-        balance_parms[1] = "balance-refresh";
-        new HTTP_Query_Task(this, context).execute(balance_parms);
-      } else if (last_price_sec < last_nonce_sec) {
-        last_refresh_sec = now_sec;
-	    if (toast != null)
-	      toast.cancel();
-        (toast = Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT)).show();
-        String price_parms[] = new String[2];
-        price_parms[0] = "https://etherchain.org/api/basic_stats";
-        price_parms[1] = "price-refresh";
-        new HTTP_Query_Task(this, context).execute(price_parms);
-      } else {
-        refresh_button.setBackgroundColor(Color.TRANSPARENT);
-        if (refresh_mode) {
-          refresh_mode = false;
-          dsp_balance();
-        }
-	    if (toast != null)
-	      toast.cancel();
-        Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT).show();
-      }
+      refresh_button.startAnimation(AnimationUtils.loadAnimation(this, R.anim.rotate_forever));
+      if (!Payment_Processor.has_message(this))
+        Payment_Processor.refresh_balance(this, context);
     }
 
 
@@ -288,50 +301,26 @@
         Util.show_err(getBaseContext(), msg, 5);
         return;
       }
-      if (nonce < last_nonce) {
-        if (now_sec - last_pay_sec < 75) {
-          String msg = getResources().getString(R.string.min_sec_between_pays);
-          Util.show_err(getBaseContext(), msg, 10);
-          return;
-        } else {
-          (toast = Toast.makeText(context, "refreshing account status (nonce)...", Toast.LENGTH_SHORT)).show();
-          String nonce_URL = "https://etherchain.org/api/account/" + acct_addr + "/nonce";
-          String parms[] = new String[2];
-          parms[0] = nonce_URL;
-          parms[1] = "nonce-pay";
-          new HTTP_Query_Task(this, context).execute(parms);
-        }
+      long last_tx_nonce = preferences.getLong("last_tx_nonce", -1);
+      long verified_nonce = preferences.getLong("verified_nonce", -2);
+      long price_refresh_sec = preferences.getLong("price_refresh_sec", 0);
+      long balance = preferences.getLong("balance", 0);
+      long verified_balance = preferences.getLong("verified_balance", 0);
+      long balance_refresh_sec = preferences.getLong("balance_refresh_sec", 0);
+      if ((verified_nonce < last_tx_nonce)                                                     ||
+          (now_sec - price_refresh_sec > 5 * 60)                                               ||
+          (balance == 0 || balance != verified_balance || now_sec - balance_refresh_sec > 120)) {
+          do_pay = true;
+          Payment_Processor.refresh_balance(this, context);
       }
-      if (last_balance_sec < last_nonce_sec || (balance == 0 && now_sec - last_balance_sec > 120)) {
-    	if (toast != null)
-          toast.cancel();
-        (toast = Toast.makeText(context, "refreshing account status (balance)...", Toast.LENGTH_SHORT)).show();
-        String balance_parms[] = new String[2];
-        balance_parms[0] = "https://etherchain.org/api/account/" + acct_addr;
-        balance_parms[1] = "balance-pay";
-        new HTTP_Query_Task(this, context).execute(balance_parms);
-        return;
-      }
-      if (last_price_sec < last_nonce_sec || price == 0) {
-        if (toast != null)
-          toast.cancel();
-        (toast = Toast.makeText(context, "refreshing account status (price)...", Toast.LENGTH_SHORT)).show();
-        String price_parms[] = new String[2];
-        price_parms[0] = "https://etherchain.org/api/basic_stats";
-        price_parms[1] = "price-pay";
-        new HTTP_Query_Task(this, context).execute(price_parms);
-        return;
-      }
-      if (now_sec - last_price_sec < 5 && toast != null) {
-        toast.cancel();
-        (toast = Toast.makeText(context, "account status is up-to-date", Toast.LENGTH_SHORT)).show();
-      }
+      do_pay = false;
       do_pay_guts();
     }
 
     private void show_welcome_dialog() {
       AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-      alertDialogBuilder.setTitle("EtherPay");
+      String app_name = getResources().getString(R.string.app_name);    
+      alertDialogBuilder.setTitle(app_name);
       alertDialogBuilder.setMessage(getResources().getString(R.string.welcome));
       alertDialogBuilder.setCancelable(false);
       alertDialogBuilder.setNeutralButton("OK",
@@ -347,7 +336,8 @@
 
     private void show_about_dialog() {
       AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-      alertDialogBuilder.setTitle("About EtherPay");
+      String app_name = getResources().getString(R.string.app_name);    
+      alertDialogBuilder.setTitle("About " + app_name);
       alertDialogBuilder.setMessage(getResources().getString(R.string.about));
       alertDialogBuilder.setCancelable(false);
       alertDialogBuilder.setNeutralButton("OK",
@@ -407,154 +397,15 @@
     }
 
 
-    public void handle_http_rsp(String callback, String rsp) {
-      int next_idx = callback.indexOf("-");
-      String next_callback = (next_idx >= 0) ? callback.substring(next_idx + 1) : "";
-      if (callback.startsWith("balance")) {
-        set_balance(rsp);
-      } else if (callback.startsWith("price")) {
-        set_price(rsp);
-      } else if (callback.startsWith("nonce")) {
-        set_nonce(rsp);
-      }
-      //
-      if (next_callback.startsWith("refresh")) {
-        do_refresh(null);
-      } else if (next_callback.equals("pay")) {
-        do_pay(null);
-      }
-    }
-
-    private void set_nonce(String nonce_rsp) {
-      //typical response id:
-      //{
-      // "status": 1,
-      // "data": [
-      //  {
-      //   "accountNonce": "16"
-      //  }
-      // ]
-      //}
-      boolean got_nonce = false;
-      if (nonce_rsp.contains("accountNonce")) {
-        nonce_rsp = nonce_rsp.replaceAll("\"", "");
-        int field_idx = nonce_rsp.indexOf("accountNonce") + "accountNonce".length();
-        int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
-        int end_idx = nonce_rsp.indexOf('}', beg_idx);
-        String nonce_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-        if (!nonce_str.equals("null")) {
-          nonce = Long.valueOf(nonce_str);
-          last_nonce_sec = System.currentTimeMillis() / 1000;
-          got_nonce = true;
-        }
-      } else if (nonce_rsp.contains("status")) {
-        int field_idx = nonce_rsp.indexOf("status") + "status".length();
-        int beg_idx = nonce_rsp.indexOf(':', field_idx) + 1;
-        int end_idx = nonce_rsp.indexOf(',', beg_idx);
-        String status_str = nonce_rsp.substring(beg_idx, end_idx).trim();
-        if (status_str.equals("1")) {
-          //no error, but no nonce data.... the account has necer been used
-          nonce = -1;
-          last_nonce_sec = System.currentTimeMillis() / 1000;
-          got_nonce = true;
-        }
-      }
-      if (!got_nonce) {
-        //if we keep it -2, then we'll continue trying to refresh.... perhaps it's better to just
-        //assume that no payments have been made.
-        nonce = -1;
-        Util.show_err(getBaseContext(), "error retreiving nonce!", 3);
-        Util.show_err(getBaseContext(), nonce_rsp, 10);
-      }
-    }
-
-
-    private void set_balance(String rsp) {
-      //typical response is:
-      //{
-      // "status": 1,
-      // "data": [
-      //  {
-      //   "address": "0x7223efbf783eba259451a89e8e84c26611df8c4f",
-      //   "balance": 40038159108626850000,
-      //   "nonce": null,
-      //   "code": "0x",
-      //   "name": null,
-      //   "storage": null,
-      //   "firstSeen": null
-      //  }
-      // ]
-      //}
-      boolean got_balance = false;
-      if (rsp.contains("balance")) {
-        int field_idx = rsp.indexOf("balance") + "balance".length();
-        int beg_idx = rsp.indexOf(':', field_idx) + 1;
-        int end_idx = rsp.indexOf(',', beg_idx);
-        String balance_str = rsp.substring(beg_idx, end_idx).trim();
-        if (!balance_str.equals("null")) {
-          balance = Float.valueOf(balance_str) / WEI_PER_ETH;
-          last_balance_sec = System.currentTimeMillis() / 1000;
-          got_balance = true;
-        }
-      } else if (rsp.contains("status")) {
-        int field_idx = rsp.indexOf("status") + "status".length();
-        int beg_idx = rsp.indexOf(':', field_idx) + 1;
-        int end_idx = rsp.indexOf(',', beg_idx);
-        String status_str = rsp.substring(beg_idx, end_idx).trim();
-        if (status_str.equals("1")) {
-          //no error, but no balance data.... the account has necer been used
-          balance = 0;
-          last_balance_sec = System.currentTimeMillis() / 1000;
-          got_balance = true;
-        }
-      }
-      if (!got_balance) {
-        Util.show_err(getBaseContext(), "error retreiving balance!", 3);
-        Util.show_err(getBaseContext(), rsp, 10);
-      }
-      //Toast.makeText(context, "balance = " + balance, Toast.LENGTH_LONG).show();
-      dsp_balance();
-    }
-
-    private void set_price(String rsp) {
-      //typical response is:
-      //{
-      // .....
-      //    "price": {
-      //        "usd": 9.71,
-      //        "btc": 0.01291
-      //    },
-      //    "stats": {
-      //        "blockTime": 14.0749,
-      //        "difficulty": 71472687483186.2,
-      //        "hashRate": 5270984772944.684,
-      //        "uncle_rate": 0.0686
-      //    }
-      //}
-      if (rsp.contains("price")) {
-        int price_field_idx = rsp.indexOf("price") + "price".length();
-        rsp = rsp.substring(price_field_idx);
-        if (rsp.contains("usd")) {
-          int field_idx = rsp.indexOf("usd") + "usd".length();
-          int beg_idx = rsp.indexOf(':', field_idx) + 1;
-          int end_idx = rsp.indexOf(',', beg_idx);
-          String price_str = rsp.substring(beg_idx, end_idx).trim();
-          if (!price_str.equals("null")) {
-            price = Float.valueOf(price_str);
-            last_price_sec = System.currentTimeMillis() / 1000;
-          }
-        }
-      }
-      dsp_balance();
-    }
-
-
     private void dsp_balance() {
-      TextView balance_view = (TextView) findViewById(R.id.balance);
-      String balance_str = String.format("%7.05f", balance) + " ETH";
-      balance_view.setText(String.valueOf(balance_str));
+      long wei_balance = preferences.getLong("balance", 0);
+      float eth_balance = (float)wei_balance / Util.WEI_PER_ETH;      
+      TextView eth_balance_view = (TextView) findViewById(R.id.eth_balance);
+      String eth_balance_str = String.format("%7.05f", eth_balance) + " ETH";
+      eth_balance_view.setText(String.valueOf(eth_balance_str));
       TextView usd_balance_view = (TextView) findViewById(R.id.usd_balance);
-      float usd_balance = balance * price;
+      float usd_price = preferences.getFloat("usd_price", 0);
+      float usd_balance = eth_balance * usd_price;
       String usd_balance_str = String.format("%2.02f", usd_balance) + " USD";
       usd_balance_view.setText(String.valueOf(usd_balance_str));
       if (refresh_mode) {
@@ -563,9 +414,9 @@
         anim.setStartOffset(20);
         anim.setRepeatMode(Animation.REVERSE);
         anim.setRepeatCount(Animation.INFINITE);
-        balance_view.startAnimation(anim);
+        eth_balance_view.startAnimation(anim);
       } else {
-        balance_view.clearAnimation();
+        eth_balance_view.clearAnimation();
       }
     }
 
@@ -573,6 +424,29 @@
       TextView acct_view = (TextView) findViewById(R.id.wallet_id);
       //String acct_str = acct_addr.substring(0, 20) + " ...";
       acct_view.setText(String.valueOf(acct_addr));
+    }
+
+
+    //this is the callback from Payment_Processor
+    public boolean payment_result(boolean ok, String txid, long size_wei, String client_data, String error) {
+      System.out.println("MainActivity::payment_result: Hey! we should never be here!");
+      return true;
+    }
+    public void interim_payment_result(long size_wei, String client_data, String msg) {
+      System.out.println("Hey! we should never be here!");
+    }
+    public void balance_result(boolean ok, long balance, String error) {
+      System.out.println("ShareActivity::balance_result: payment processor completed. balance = " + balance);
+      if (do_pay) {
+        do_pay_guts();
+      } else {
+        Message message = message_handler.obtainMessage(HANDLE_BALANCE_CALLBACK, ok ? 1 : 0, 0);
+        message.sendToTarget();
+      }
+    }
+    public void interim_balance_result(String msg) {
+      Message message = message_handler.obtainMessage(HANDLE_INTERIM_CALLBACK, 0, 0, msg);
+      message.sendToTarget();
     }
 
   }
