@@ -64,6 +64,7 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
   private SharedPreferences preferences;
   private ListView list_view;
   List<Transaction_Info> transaction_list = null;
+  private int total_transactions_processed = 0;
   private Toast toast = null;
 
   //inputs
@@ -105,6 +106,7 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
 
   public void onResume() {
     super.onResume();  // Always call the superclass method first
+    total_transactions_processed = 0;
     get_transactions(0);
   }
 
@@ -246,8 +248,14 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
 
   public void handle_http_rsp(String callback, String rsp) {
     if (callback.equals("transactions")) {
-      if (set_transactions(rsp) >= 50) {
-        get_transactions(transaction_list.size());
+      int processed = set_transactions(rsp);
+      total_transactions_processed += processed;
+      if ((processed) >= 50) {
+        System.out.println(processed + " transaction processed; cur size is " + transaction_list.size());
+        if (toast != null)
+          toast.cancel();
+        (toast = Toast.makeText(context, "retrieving " + total_transactions_processed + " transactions...", Toast.LENGTH_LONG)).show();
+        get_transactions(total_transactions_processed);
       } else {
         Transaction_Info values[] = transaction_list.toArray(new Transaction_Info[transaction_list.size()]);
         list_view = (ListView) findViewById(R.id.listview);
@@ -264,7 +272,8 @@ public class HistoryActivity extends AppCompatActivity implements HTTP_Query_Cli
         });
         */
         //in case the "retrieving transactions" message is still showing
-        toast.cancel();
+        if (toast != null)
+          toast.cancel();
       }
       return;
     }

@@ -10,7 +10,7 @@
     <!-- this is margin above the header bar that introduces a batch of buttons.
         for example, "history" on the sendactivity. the margin is greater for large
         screens. -->
-    <dimen name="header_margin_top">12dp</dimen>
+    <dimen name="header_margin_top">22dp</dimen>
     <dimen name="header_min_height">52dp</dimen>
     <dimen name="header_text_size">18sp</dimen>
 

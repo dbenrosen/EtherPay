@@ -61,7 +61,7 @@
 
         <TextView
             android:text="Balance: "
-	    android:textSize="@dimen/balance_text_size_big"
+    	    android:textSize="@dimen/balance_text_size_big"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -80,7 +80,7 @@
 
             <TextView
                 android:text="0.000000 ETH"
-		android:textSize="@dimen/balance_text_size_big"
+	        	android:textSize="@dimen/balance_text_size_big"
                 android:gravity="left"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -89,7 +89,7 @@
 
             <TextView
                 android:text="0.00 USD"
-		android:textSize="@dimen/balance_text_size_medium"
+		        android:textSize="@dimen/balance_text_size_medium"
                 android:gravity="left"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

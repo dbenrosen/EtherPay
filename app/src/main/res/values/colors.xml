@@ -3,8 +3,8 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="color_toolbar">#1dcf1d</color>
-    <color name="color_headerbar">#14808d</color>
+    <color name="color_toolbar">#c1b791</color>
+    <color name="color_headerbar">#99b791</color>
 
     <!-- these colors are defined for the MobileVisionBarcodeScanner -->
     <color name="color_green">#14808d</color>
