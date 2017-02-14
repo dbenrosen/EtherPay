@@ -98,14 +98,12 @@ https://www.myetherwallet.com and select the view-wallet-info tab.
     </string>
 
     <string name="export_acct_prompt">
-This QR Code represents the private key to your account. You can scan the QR Code into an
-Ether wallet, or into another smart-phone that is running Uncle Finney\'s Poker. You would
-do this to move your account to a different wallet. Also you can send the key to yourself
-to back it up, for example, to protect your account in case you break your phone.
+This QR Code represents the private key to your account. You can scan the QR Code into
+another smart-phone that is running EtherPay Ether wallet, or you can send it to a computer
+where you are running Ether wallet software. Also you can send the key to yourself to back
+it up, for example, to protect your account in case you break your phone.
 \n\nImportant: Do not share your private key. If you give someone your private key
 then they have access to ALL the funds in your account!
-\n\nNote: It is not recommended to play Uncle Finney\'s Poker from two different
-devices, using the same Ether account.
 </string>
 
     <string name="receive_qr_prompt">
