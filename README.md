@@ -61,14 +61,10 @@ unzip master.zip
 cd ZBarAndroidSDK-master/
 # need to rename libZBarDecoder.so to libzbarjni.so
 find . -name "libZBarDecoder.so" | xargs -I X sh -c 'mv X $(echo X | sed "s/libZBarDecoder/libzbarjni/")'
-cd ZBarBuild/libs/
 if [ ! -d ${ETHERPAY_ROOT}/app/src/main/jniLibs ]; then \
    mkdir ${ETHERPAY_ROOT}/app/src/main/jniLibs;         \
 fi
-find . -name libiconv.so | \
- xargs -I X cp X ${ETHERPAY_ROOT}/app/src/main/jniLibs/
-find . -name libzbarjni.so | \
- xargs -I X cp X ${ETHERPAY_ROOT}/app/src/main/jniLibs/
+cp -R ZBarBuild/libs/* ${ETHERPAY_ROOT}/app/src/main/jniLibs/
 cd $ETHERPAY_ROOT
 
 
