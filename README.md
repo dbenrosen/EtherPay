@@ -32,7 +32,7 @@ cd ~/tmp
 wget https://sourceforge.net/projects/zbar/files/AndroidSDK/ZBarAndroidSDK-0.1.zip
 unzip ZBarAndroidSDK-0.1.zip
 cp ZBarAndroidSDK-0.1/libs/zbar.jar ${ETHERPAY_ROOT}/app/libs/
-
+cd $ETHERPAY_ROOT
 
 To get ethereumj-core:
 ETHERPAY_ROOT=$(pwd)
@@ -40,4 +40,27 @@ cd ~/tmp
 wget https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
 unzip ethereumj-core-1.4.0-20170124.094925-149.zip
 cp ethereumj-core-1.4.0-SNAPSHOT/lib/ethereumj-core-1.4.0-SNAPSHOT.jar ${ETHERPAY_ROOT}/app/libs/
+cd $ETHERPAY_ROOT
+
+
+There are also two .so files that I use in the project. These are both taken from a recompile
+of ZBarAndroidSDK (Apache License V2.0, January 2004).
+
+The steps to install these are below:
+
+ETHERPAY_ROOT=$(pwd)
+cd ~/tmp
+wget https://github.com/chentao0707/ZBarAndroidSDK/archive/master.zip
+unzip master.zip
+cd ZBarAndroidSDK-master/
+# need to rename libZBarDecoder.so to libzbarjni.so
+find . -name "libZBarDecoder.so" | xargs -I X sh -c 'mv X $(echo X | sed "s/libZBarDecoder/libzbarjni/")'
+cd ZBarBuild/libs/
+find . -name libiconv.so | \
+ xargs -I X cp X ${ETHERPAY_ROOT}/app/src/main/jniLibs/
+find . -name libzbarjni.so | \
+ xargs -I X cp X ${ETHERPAY_ROOT}/app/src/main/jniLibs/
+cd $ETHERPAY_ROOT
+
+
 
