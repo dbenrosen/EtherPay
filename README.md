@@ -31,6 +31,9 @@ ETHERPAY_ROOT=$(pwd)
 cd ~/tmp
 wget https://sourceforge.net/projects/zbar/files/AndroidSDK/ZBarAndroidSDK-0.1.zip
 unzip ZBarAndroidSDK-0.1.zip
+if [ ! -d ${ETHERPAY_ROOT}/app/libs ]; then \
+   mkdir ${ETHERPAY_ROOT}/app/libs;         \
+fi
 cp ZBarAndroidSDK-0.1/libs/zbar.jar ${ETHERPAY_ROOT}/app/libs/
 cd $ETHERPAY_ROOT
 
@@ -39,6 +42,9 @@ ETHERPAY_ROOT=$(pwd)
 cd ~/tmp
 wget https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
 unzip ethereumj-core-1.4.0-20170124.094925-149.zip
+if [ ! -d ${ETHERPAY_ROOT}/app/libs ]; then \
+   mkdir ${ETHERPAY_ROOT}/app/libs;         \
+fi
 cp ethereumj-core-1.4.0-SNAPSHOT/lib/ethereumj-core-1.4.0-SNAPSHOT.jar ${ETHERPAY_ROOT}/app/libs/
 cd $ETHERPAY_ROOT
 
@@ -56,6 +62,9 @@ cd ZBarAndroidSDK-master/
 # need to rename libZBarDecoder.so to libzbarjni.so
 find . -name "libZBarDecoder.so" | xargs -I X sh -c 'mv X $(echo X | sed "s/libZBarDecoder/libzbarjni/")'
 cd ZBarBuild/libs/
+if [ ! -d ${ETHERPAY_ROOT}/app/src/main/jniLibs ]; then \
+   mkdir ${ETHERPAY_ROOT}/app/src/main/jniLibs;         \
+fi
 find . -name libiconv.so | \
  xargs -I X cp X ${ETHERPAY_ROOT}/app/src/main/jniLibs/
 find . -name libzbarjni.so | \
