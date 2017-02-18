@@ -137,9 +137,9 @@ On this screen you can make an Ether payment; that is, send Ether to the selecte
 \n\nBefore you click the \"Pay\" button, enter the amount that you would like to send. You
 Can choose to denominate the amount in either ETH or Finney (one thousand\'th of an Ether).
 \n\nIn the options menu you can check \"Show Data\." This will give you the ability to attach a
-short note to the payment. This note will be permanently attached to the payment, and publicly
-visible. For example, if you are paying a bill at a restaurant, you might enter your table number
-here.
+short note to the payment. This note will be permanently attached to the payment, and is
+visible publicly. For example, if you are paying a bill at a restaurant, you might enter your
+table number here.
 \n\nIn the options menu you can also check \"Show GAS\." Each Ether transaction includes a small
 fee called \"GAS\", which pays for the computational cost of executing the transaction on the
 Ethereum Virtual Machine. Gas is not demoninated in Ether; to find the actual cost of a transaction
@@ -156,7 +156,7 @@ enable \"Show Gas\" in the options menu. Then you can specify the maximum gas fo
 Specifiy an Amount
 </string>
 <string name="size_help">
-Use this field to specify the amount of Finney (Ether) that you would like to send. You can
+Use this field to specify the amount of Ether that you would like to send. You can
 denominate the amount in either Finney or ETH: One ETH is one thousand Finney.
 \n\nNote: In addition to the amount you send, a small transaction fee, approximately equal to
 1 Finney, will be dedcuted from your account.
