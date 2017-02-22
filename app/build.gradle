@@ -30,7 +30,6 @@ android {
 repositories {
     jcenter()
     mavenCentral()
-    maven { url "https://dl.bintray.com/ethereum/maven/" }
 }
 
 dependencies {
