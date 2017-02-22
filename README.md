@@ -16,27 +16,16 @@ https://github.com/kenglxn/QRGen
 However, there are two open source libraries that require a little bit of intervention.
 These are 
 
-zbar.jar, from
-https://sourceforge.net/projects/zbar/files/AndroidSDK/ZBarAndroidSDK-0.1.zip
-(GNU Library or Lesser General Public License version 2.0 (LGPLv2)
-
 and ethereumj-core-1.4.0-SNAPSHOT.jar, from
 https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
 (MIT License)
 
+and ZBarAndroidSDK from a recompile of ZBarAndroidSDK (Apache License V2.0, January 2004).
 
-To get zbar.jar:
+INSTRUCTIONS TO INSTALL THESE LIBS FOLLOW:
 
-ETHERPAY_ROOT=$(pwd)
-cd ~/tmp
-wget https://sourceforge.net/projects/zbar/files/AndroidSDK/ZBarAndroidSDK-0.1.zip
-unzip ZBarAndroidSDK-0.1.zip
-if [ ! -d ${ETHERPAY_ROOT}/app/libs ]; then \
-   mkdir ${ETHERPAY_ROOT}/app/libs;         \
-fi
-cp ZBarAndroidSDK-0.1/libs/zbar.jar ${ETHERPAY_ROOT}/app/libs/
-cd $ETHERPAY_ROOT
 
+==================================
 To get ethereumj-core:
 ETHERPAY_ROOT=$(pwd)
 cd ~/tmp
@@ -49,18 +38,17 @@ cp ethereumj-core-1.4.0-SNAPSHOT/lib/ethereumj-core-1.4.0-SNAPSHOT.jar ${ETHERPA
 cd $ETHERPAY_ROOT
 
 
-There are also two .so files that I use in the project. These are both taken from a recompile
-of ZBarAndroidSDK (Apache License V2.0, January 2004).
-
-The steps to install these are below:
-
+==================================
+To get ZBarAndroidSDK:
 ETHERPAY_ROOT=$(pwd)
 cd ~/tmp
 wget https://github.com/chentao0707/ZBarAndroidSDK/archive/master.zip
 unzip master.zip
 cd ZBarAndroidSDK-master/
-# need to rename libZBarDecoder.so to libzbarjni.so
-find . -name "libZBarDecoder.so" | xargs -I X sh -c 'mv X $(echo X | sed "s/libZBarDecoder/libzbarjni/")'
+if [ ! -d ${ETHERPAY_ROOT}/app/libs ]; then \
+   mkdir ${ETHERPAY_ROOT}/app/libs;         \
+fi
+cp ZBarScanProjAll/libs/ZBarDecoder.jar ${ETHERPAY_ROOT}/app/libs/
 if [ ! -d ${ETHERPAY_ROOT}/app/src/main/jniLibs ]; then \
    mkdir ${ETHERPAY_ROOT}/app/src/main/jniLibs;         \
 fi
