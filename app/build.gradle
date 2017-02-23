@@ -7,8 +7,8 @@ android {
         applicationId "com.bringcommunications.etherpay"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 13
-        versionName "3.02"
+        versionCode 14
+        versionName "3.03"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -38,27 +38,23 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    androidTestCompile ('com.google.code.findbugs:jsr305:3.0.0')
+    androidTestCompile 'com.google.code.findbugs:jsr305:3.0.0'
     compile 'com.android.support:appcompat-v7:25.0.1'
     compile 'com.android.support:design:25.0.1'
     testCompile 'junit:junit:4.12'
+    compile project(':zBarBuild')
 
     // https://mvnrepository.com/artifact/com.madgag.spongycastle/core
     compile 'com.madgag.spongycastle:core:1.54.0.0'
-
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     compile 'commons-codec:commons-codec:1.9'
-
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     compile 'org.apache.commons:commons-lang3:3.0'
-
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-android
     compile 'org.slf4j:slf4j-android:1.7.21'
-
     //https://github.com/kenglxn/QRGen
     compile 'com.github.kenglxn.QRGen:android:2.2.0'
-
+    //https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
     compile files('libs/ethereumj-core-1.4.0-SNAPSHOT.jar')
 
-    compile files('libs/ZBarDecoder.jar')
 }

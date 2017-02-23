@@ -60,7 +60,8 @@ https://www.myetherwallet.com and select the view-wallet-info tab.
     to re-import it if you want to use it with Etherpay).
     </string>
     <string name="welcome">
-      EtherPay is an Ether wallet app. &#8212; use it to check the balance in an Ether
+      EtherPay V3.03
+      \n\nEtherPay is an Ether wallet app. &#8212; use it to check the balance in an Ether
       account; or to send or receive Ether to/from other Ether addresses.
       \n\nTo use the app, the first thing you need to do is import an Ether account.
       You need to use some other Ether client to create an account &#8212; I recommend
