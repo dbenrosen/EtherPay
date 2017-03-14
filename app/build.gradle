@@ -7,8 +7,8 @@ android {
         applicationId "com.bringcommunications.etherpay"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 14
-        versionName "3.03"
+        versionCode 15
+        versionName "3.04"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
