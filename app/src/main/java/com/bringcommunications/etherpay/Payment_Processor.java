@@ -573,36 +573,44 @@ class Payment_Processor implements Runnable, HTTP_Query_Client {
         System.out.println("Payment_Processor::handle_http_rsp got " + callback + " callback, now_sec = " + now_sec);
         //
         // -- deal with gas price
-        // { "status": 1, "data": [ { "price": 23000000000 } ] }
-        //
         if (callback.startsWith("gas")) {
             long gas_price = 0;
-            if (rsp.contains("price")) {
-                String gas_price_str = Util.json_parse(rsp, "price");
+            if (rsp.contains("gasPriceHex")) {
+                String gas_price_str = Util.json_parse(rsp, "gasPriceHex");
                 if (!gas_price_str.isEmpty()) {
-                    gas_price = Long.valueOf(gas_price_str);
-                    long max_price = 0;
-                    long min_price = Long.MAX_VALUE;
-                    for (int i = 0; i < gas_price_history.length; ++i) {
-                        gas_price_history[i] = (i < gas_price_history.length - 1) ? gas_price_history[i + 1] : gas_price;
-                        if (gas_price_history[i] > max_price)
-                            max_price = gas_price_history[i];
-                        if (gas_price_history[i] < min_price)
-                            min_price = gas_price_history[i];
+                    if (gas_price_str.startsWith("0x"))
+                        gas_price_str = gas_price_str.substring(2);
+                    try {
+                        gas_price = Long.parseLong(gas_price_str, 16);
+                    } catch (NumberFormatException e) {
+                        System.out.println("payment_processor: eror parsing gas price: " + gas_price_str);
                     }
-                    SharedPreferences.Editor preferences_editor = preferences.edit();
-                    preferences_editor.putLong("gas_price", min_price);
-                    //only update timestamp after we have collected several samples. that way we initially collect samples for
-                    //every payment
-                    if (max_price < Long.MAX_VALUE)
-                        preferences_editor.putLong("gas_price_refresh_sec", now_sec);
-                    preferences_editor.apply();
-                    call_next_callback(next_callback, 0);
-                    return;
+                    if (gas_price > 0) {
+                        long max_price = 0;
+                        long min_price = Long.MAX_VALUE;
+                        for (int i = 0; i < gas_price_history.length; ++i) {
+                            gas_price_history[i] = (i < gas_price_history.length - 1) ? gas_price_history[i + 1] : gas_price;
+                            if (gas_price_history[i] > max_price)
+                                max_price = gas_price_history[i];
+                            if (gas_price_history[i] < min_price)
+                                min_price = gas_price_history[i];
+                        }
+                        SharedPreferences.Editor preferences_editor = preferences.edit();
+                        preferences_editor.putLong("gas_price", min_price);
+                        //only update timestamp after we have collected several samples. that way we initially collect samples for
+                        //every payment
+                        if (max_price < Long.MAX_VALUE)
+                            preferences_editor.putLong("gas_price_refresh_sec", now_sec);
+                        preferences_editor.apply();
+                        call_next_callback(next_callback, 0);
+                        return;
+                    }
                 }
             }
             System.out.println("payment_processor: eror retrieving gas price");
-            dispose_current_message(next_callback, false, "", 0, "error retrieving gas price!", true);
+            call_next_callback(next_callback, 0);
+            //we can continue on using the default or historical gas price
+            //dispose_current_message(next_callback, false, "", 0, "error retrieving gas price!", true);
             return;
         }
 
@@ -664,6 +672,7 @@ class Payment_Processor implements Runnable, HTTP_Query_Client {
                 return;
             }
             long best_nonce = -1;
+            long gas_price = -1;
             String acct_addr = preferences.getString("acct_addr", "");
             for (int i = 0, idx = 0; i < 100; ++i) {
                 if (rsp.contains("{")) {
@@ -677,6 +686,31 @@ class Payment_Processor implements Runnable, HTTP_Query_Client {
                     if (!sender.equals(acct_addr))
                         continue;
                 }
+                //while we're here, we can update gas price
+                if (gas_price < 0 && rsp.contains("price")) {
+                    String price_str = Util.json_parse(rsp, "price");
+                    if (!price_str.isEmpty()) {
+                        gas_price = Long.valueOf(price_str);
+                        long max_price = 0;
+                        long min_price = Long.MAX_VALUE;
+                        for (int pi = 0; pi < gas_price_history.length; ++pi) {
+                            gas_price_history[pi] = (pi < gas_price_history.length - 1) ? gas_price_history[pi + 1] : gas_price;
+                            if (gas_price_history[pi] > max_price)
+                                max_price = gas_price_history[pi];
+                            if (gas_price_history[pi] < min_price)
+                                min_price = gas_price_history[pi];
+                        }
+                        System.out.println("read new gas price, " + gas_price + "; saving min gas price = " + min_price);
+                        SharedPreferences.Editor preferences_editor = preferences.edit();
+                        preferences_editor.putLong("gas_price", min_price);
+                        //only update timestamp after we have collected several samples. that way we initially collect samples for
+                        //every payment
+                        if (max_price < Long.MAX_VALUE)
+                            preferences_editor.putLong("gas_price_refresh_sec", now_sec);
+                        preferences_editor.apply();
+                    }
+                }
+
                 if (rsp.contains("accountNonce")) {
                     String nonce_str = Util.json_parse(rsp, "accountNonce");
                     if (!nonce_str.isEmpty()) {
