@@ -46,6 +46,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.madgag.spongycastle/core
     compile 'com.madgag.spongycastle:core:1.54.0.0'
+    // https://mvnrepository.com/artifact/com.madgag.spongycastle/prov
+    compile group: 'com.madgag.spongycastle', name: 'prov', version: '1.54.0.0'
+
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     compile 'commons-codec:commons-codec:1.9'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
