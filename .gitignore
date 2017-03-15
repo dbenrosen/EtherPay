@@ -9,4 +9,6 @@
 .externalNativeBuild
 /**/CVS/*
 *~
-
+ethereumj-core/build/
+ethereumj-core/src/test/resources/state/
+zBarBuild/build/
