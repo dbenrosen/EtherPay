@@ -7,9 +7,10 @@ android {
         applicationId "com.bringcommunications.etherpay"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 15
-        versionName "3.04"
+        versionCode 16
+        versionName "4.00"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         debug {
@@ -35,12 +36,16 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
+    configurations {
+        all*.exclude group: 'org.iq80.leveldb'
+    }
 }
 
 repositories {
     jcenter()
     mavenCentral()
 }
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -62,10 +67,10 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     compile 'org.apache.commons:commons-lang3:3.0'
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-android
-    compile 'org.slf4j:slf4j-android:1.7.21'
+    //compile 'org.slf4j:slf4j-android:1.7.21'
     //https://github.com/kenglxn/QRGen
     compile 'com.github.kenglxn.QRGen:android:2.2.0'
-    //https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
-    //compile files('libs/ethereumj-core-1.4.0-SNAPSHOT.jar')
+
+    //https://github.com/ethereum/ethereumj
     compile project(':ethereumj-core')
 }

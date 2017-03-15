@@ -104,7 +104,7 @@ test {
 }
 
 ext {
-    slf4jVersion = '1.7.7'
+    slf4jVersion = '1.7.21'
     leveldbVersion = '0.7'
     scastleVersion = '1.53.0.0'
     springVersion = '4.2.0.RELEASE'
@@ -114,6 +114,7 @@ ext {
 
 configurations {
     all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude module: 'org.iq80.leveldb'
 }
 
 
@@ -149,7 +150,7 @@ dependencies {
     }
 
     // used to hide spring initialization logs messages in samples
-    optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+    //optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
 
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
