@@ -39,6 +39,9 @@ android {
     configurations {
         all*.exclude group: 'org.iq80.leveldb'
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
 }
 
 repositories {
