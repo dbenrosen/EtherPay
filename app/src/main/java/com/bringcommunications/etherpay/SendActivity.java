@@ -28,7 +28,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
-import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -403,14 +402,9 @@ public class SendActivity extends AppCompatActivity implements Payment_Processor
     return true;
   }
   public void interim_payment_result(long size_wei, String client_data, String msg) {
-    /*
-    TODO:
-    Message delay_message = socket_emitter_handler.obtainMessage(SOCKET_EVENT_DELAY, 1, 0, null);
-    delay_message.sendToTarget();
     if (toast != null)
       toast.cancel();
     (toast = Toast.makeText(context, "processing", Toast.LENGTH_LONG)).show();
-     */
   }
   public void balance_result(boolean ok, long balance, String error) {
     System.out.println("SendActivity:balance_result: Hey! we should never be here!");
