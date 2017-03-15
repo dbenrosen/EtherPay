@@ -25,6 +25,16 @@ android {
             jniLibs.srcDir 'jniLibs'
         }
     }
+    packagingOptions {
+        exclude 'META-INF/spring.tooling'
+        exclude 'META-INF/spring.handlers'
+        exclude 'META-INF/spring.schemas'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
 }
 
 repositories {
@@ -43,9 +53,10 @@ dependencies {
     compile 'com.android.support:design:25.0.1'
     testCompile 'junit:junit:4.12'
     compile project(':zBarBuild')
-
     // https://mvnrepository.com/artifact/com.madgag.spongycastle/core
     compile 'com.madgag.spongycastle:core:1.54.0.0'
+    // https://mvnrepository.com/artifact/com.madgag.spongycastle/prov
+    compile 'com.madgag.spongycastle:prov:1.54.0.0'
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     compile 'commons-codec:commons-codec:1.9'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
@@ -55,6 +66,6 @@ dependencies {
     //https://github.com/kenglxn/QRGen
     compile 'com.github.kenglxn.QRGen:android:2.2.0'
     //https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core/1.4.0-SNAPSHOT/ethereumj-core-1.4.0-20170124.094925-149.zip
-    compile files('libs/ethereumj-core-1.4.0-SNAPSHOT.jar')
-
+    //compile files('libs/ethereumj-core-1.4.0-SNAPSHOT.jar')
+    compile project(':ethereumj-core')
 }
