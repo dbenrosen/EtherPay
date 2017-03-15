@@ -1,7 +1,7 @@
 package org.ethereum.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +9,7 @@ import java.util.Properties;
 
 public class BuildInfo {
 
-    private static final Logger logger = LoggerFactory.getLogger("general");
+    //private static final Logger logger = LoggerFactory.getLogger("general");
 
     public static String buildHash;
     public static String buildTime;
@@ -27,15 +27,15 @@ public class BuildInfo {
                 buildTime = props.getProperty("build.time");
                 buildBranch = props.getProperty("build.branch");
             } else {
-                logger.warn("File not found `build-info.properties`. Run `gradle build` to generate it");
+                //logger.warn("File not found `build-info.properties`. Run `gradle build` to generate it");
             }
         } catch (IOException e) {
-            logger.error("Error reading /build-info.properties", e);
+            //logger.error("Error reading /build-info.properties", e);
         }
     }
 
     public static void printInfo(){
-        logger.info("git.hash: [{}]", buildHash);
-        logger.info("build.time: {}", buildTime);
+        //logger.info("git.hash: [{}]", buildHash);
+        //logger.info("build.time: {}", buildTime);
     }
 }

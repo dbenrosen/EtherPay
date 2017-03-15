@@ -18,8 +18,8 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -33,7 +33,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class Transaction {
 
-    private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
+    //private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
     private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("21000");
 
@@ -198,7 +198,7 @@ public class Transaction {
                 byte[] s = transaction.get(8).getRLPData();
                 this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
             } else {
-                logger.debug("RLP encoded tx is not signed!");
+                //logger.debug("RLP encoded tx is not signed!");
             }
             this.parsed = true;
             this.hash = getHash();
@@ -362,7 +362,7 @@ public class Transaction {
             }
             return sendAddress;
         } catch (SignatureException e) {
-            logger.error(e.getMessage(), e);
+            //logger.error(e.getMessage(), e);
         }
         return null;
     }

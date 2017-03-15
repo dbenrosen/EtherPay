@@ -43,7 +43,7 @@ Import Account
 We cannot scan because we do not have permission to access the camera.
 </string>
 <string name="scan_addr_prompt">
-Scan the QR code that represents the reqipient address. Once the recipient
+Scan the QR code that represents the recipient address. Once the recipient
 address has been identified, you will be able to specify the amount of Finney
 (Ether) that you would like to send.
 </string>

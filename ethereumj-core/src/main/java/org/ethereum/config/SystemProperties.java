@@ -19,8 +19,8 @@ import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockCustomHashRule;
 import org.ethereum.validator.BlockHeaderValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
@@ -53,7 +53,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @since 22.05.2014
  */
 public class SystemProperties {
-    private static Logger logger = LoggerFactory.getLogger("general");
+    //private static Logger logger = LoggerFactory.getLogger("general");
 
     public final static String PROPERTY_DB_DIR = "database.dir";
     public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
@@ -161,23 +161,23 @@ public class SystemProperties {
 
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
-            logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
+            //logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
             String res = System.getProperty("ethereumj.conf.res");
             Config cmdLineConfigRes = res != null ? ConfigFactory.parseResources(res) : ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource '" + res + "'");
+            //logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource '" + res + "'");
             Config userConfig = ConfigFactory.parseResources("user.conf");
-            logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
+            //logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
             File userDirFile = new File(System.getProperty("user.dir"), "/config/ethereumj.conf");
             Config userDirConfig = ConfigFactory.parseFile(userDirFile);
-            logger.info("Config (" + (userDirConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from file '" + userDirFile + "'");
+            //logger.info("Config (" + (userDirConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from file '" + userDirFile + "'");
             Config testConfig = ConfigFactory.parseResources("test-ethereumj.conf");
-            logger.info("Config (" + (testConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-ethereumj.conf'");
+            //logger.info("Config (" + (testConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-ethereumj.conf'");
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
-            logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
+            //logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
-            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
+            //logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            //logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = apiConfig
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
@@ -187,8 +187,8 @@ public class SystemProperties {
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
 
-            logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
-                    setComments(false).setJson(false)));
+            //logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
+            //        setComments(false).setJson(false)));
 
             config = javaSystemProperties.withFallback(config)
                     .resolve();     // substitute variables in config if any
@@ -206,7 +206,7 @@ public class SystemProperties {
 
             this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
         } catch (Exception e) {
-            logger.error("Can't read config.", e);
+            //logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
     }
@@ -643,8 +643,8 @@ public class SystemProperties {
                     try (Writer w = new FileWriter(file)) {
                         props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
                     }
-                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                    logger.info("Generated nodeID and its private key stored in " + file);
+                    //logger.info("New nodeID generated: " + props.getProperty("nodeId"));
+                    //logger.info("Generated nodeID and its private key stored in " + file);
                 }
                 generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
             } catch (IOException e) {
@@ -692,13 +692,13 @@ public class SystemProperties {
     public String bindIp() {
         if (!config.hasPath("peer.discovery.bind.ip") || config.getString("peer.discovery.bind.ip").trim().isEmpty()) {
             if (bindIp == null) {
-                logger.info("Bind address wasn't set, Punching to identify it...");
+                //logger.info("Bind address wasn't set, Punching to identify it...");
                 try {
                     Socket s = new Socket("www.google.com", 80);
                     bindIp = s.getLocalAddress().getHostAddress();
-                    logger.info("UDP local bound to: {}", bindIp);
+                    //logger.info("UDP local bound to: {}", bindIp);
                 } catch (IOException e) {
-                    logger.warn("Can't get bind IP. Fall back to 0.0.0.0: " + e);
+                    //logger.warn("Can't get bind IP. Fall back to 0.0.0.0: " + e);
                     bindIp = "0.0.0.0";
                 }
             }
@@ -714,7 +714,7 @@ public class SystemProperties {
     public String externalIp() {
         if (!config.hasPath("peer.discovery.external.ip") || config.getString("peer.discovery.external.ip").trim().isEmpty()) {
             if (externalIp == null) {
-                logger.info("External IP wasn't set, using checkip.amazonaws.com to identify it...");
+                //logger.info("External IP wasn't set, using checkip.amazonaws.com to identify it...");
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(
                             new URL("http://checkip.amazonaws.com").openStream()));
@@ -727,10 +727,10 @@ public class SystemProperties {
                     } catch (Exception e) {
                         throw new IOException("Invalid address: '" + externalIp + "'");
                     }
-                    logger.info("External address identified: {}", externalIp);
+                    //logger.info("External address identified: {}", externalIp);
                 } catch (IOException e) {
                     externalIp = bindIp();
-                    logger.warn("Can't get external IP. Fall back to peer.bind.ip: " + externalIp + " :" + e);
+                    //logger.warn("Can't get external IP. Fall back to peer.bind.ip: " + externalIp + " :" + e);
                 }
             }
             return externalIp;

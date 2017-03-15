@@ -1,8 +1,8 @@
 package org.ethereum.util;
 
 import org.ethereum.db.ByteArrayWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -45,7 +45,7 @@ import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
  */
 public class RLP {
 
-    private static final Logger logger = LoggerFactory.getLogger("rlp");
+    //private static final Logger logger = LoggerFactory.getLogger("rlp");
 
 
     public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
@@ -491,7 +491,7 @@ public class RLP {
 
             while (pos < endPos) {
 
-                logger.debug("fullTraverse: level: " + level + " startPos: " + pos + " endPos: " + endPos);
+                //logger.debug("fullTraverse: level: " + level + " startPos: " + pos + " endPos: " + endPos);
 
 
                 // It's a list with a payload more than 55 bytes

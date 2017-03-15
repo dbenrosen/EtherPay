@@ -22,8 +22,8 @@ import org.ethereum.crypto.jce.ECKeyPairGenerator;
 import org.ethereum.crypto.jce.ECSignatureFactory;
 import org.ethereum.crypto.jce.SpongyCastleProvider;
 import org.ethereum.util.ByteUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
@@ -90,7 +90,7 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * bitcoinj on GitHub</a>.
  */
 public class ECKey implements Serializable {
-    private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
+    //private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
 
     /**
      * The parameters of the secp256k1 curve that Ethereum uses.
@@ -952,7 +952,7 @@ public class ECKey implements Serializable {
         } catch (NullPointerException npe) {
             // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures.
             // Those signatures are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
-            logger.error("Caught NPE inside bouncy castle", npe);
+            //logger.error("Caught NPE inside bouncy castle", npe);
             return false;
         }
     }
