@@ -17,7 +17,7 @@ android {
             debuggable true
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -76,4 +76,6 @@ dependencies {
 
     //https://github.com/ethereum/ethereumj
     compile project(':ethereumj-core')
+
+    compile 'com.android.support:multidex:1.0.1'
 }
